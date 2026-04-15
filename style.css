@@ -1,0 +1,230 @@
+// ---------- DATA ----------
+function initDummyData() {
+    if (!localStorage.getItem('datingAppUsers')) {
+        const demo = [
+            { id: "u1", name: "Emma", email: "emma@lumeet.com", password: "pass", gender: "Female", age: 26, bio: "Adventure lover, hiking & coffee", interests: ["hiking","travel"], location: "Austin", profilePic: "https://randomuser.me/api/portraits/women/44.jpg", likedBy: [], swipedRight: [], swipedLeft: [], matches: ["u2"], profileViews: 42, likesReceived: 12, isPremium: false, lastSeen: new Date().toISOString(), online: true },
+            { id: "u2", name: "Liam", email: "liam@lumeet.com", password: "pass", gender: "Male", age: 28, bio: "Art & music lover", interests: ["music","art"], location: "Seattle", profilePic: "https://randomuser.me/api/portraits/men/32.jpg", likedBy: ["u1"], swipedRight: [], swipedLeft: [], matches: ["u1"], profileViews: 30, likesReceived: 8, isPremium: false, lastSeen: new Date(Date.now() - 3600000).toISOString(), online: false },
+            { id: "u3", name: "Sophia", email: "sophia@lumeet.com", password: "pass", gender: "Female", age: 24, bio: "Yoga & sunset chaser", interests: ["yoga","photography"], location: "Miami", profilePic: "https://randomuser.me/api/portraits/women/68.jpg", likedBy: [], swipedRight: [], swipedLeft: [], matches: [], profileViews: 15, likesReceived: 5, isPremium: false, lastSeen: new Date(Date.now() - 86400000).toISOString(), online: true }
+        ];
+        localStorage.setItem('datingAppUsers', JSON.stringify(demo));
+        const initialMsgs = { "u1_u2": [{ id: "m1", senderId: "u2", text: "Hey Emma! Love your profile 😊", timestamp: Date.now() - 7200000, status: "read" }, { id: "m2", senderId: "u1", text: "Thanks Liam! You too 🔥", timestamp: Date.now() - 3600000, status: "read" }] };
+        localStorage.setItem('matchesMessages', JSON.stringify(initialMsgs));
+    }
+    if (!localStorage.getItem('appSettings')) localStorage.setItem('appSettings', JSON.stringify({ lastSeen: true, onlineStatus: true, profileVisibility: "public", messageNotif: true }));
+    if (!localStorage.getItem('datingPreferences')) localStorage.setItem('datingPreferences', JSON.stringify({ ageMin: 22, ageMax: 35, distance: 50 }));
+}
+function getUsers() { return JSON.parse(localStorage.getItem('datingAppUsers')); }
+function saveUsers(users) { localStorage.setItem('datingAppUsers', JSON.stringify(users)); }
+function getMessagesStore() { return JSON.parse(localStorage.getItem('matchesMessages') || '{}'); }
+function saveMessagesStore(obj) { localStorage.setItem('matchesMessages', JSON.stringify(obj)); }
+let currentUser = null;
+function updateCurrentUserInDB(updatedUser) { let users = getUsers(); const idx = users.findIndex(u => u.id === updatedUser.id); if (idx !== -1) users[idx] = updatedUser; saveUsers(users); currentUser = updatedUser; localStorage.setItem('currentUser', JSON.stringify(currentUser)); }
+
+// Auth
+const loginView = document.getElementById('loginView'), signupView = document.getElementById('signupView'), mainApp = document.getElementById('mainApp');
+document.getElementById('goToSignupLink')?.addEventListener('click', (e) => { e.preventDefault(); loginView.style.display = 'none'; signupView.style.display = 'flex'; });
+document.getElementById('goToLoginLink')?.addEventListener('click', (e) => { e.preventDefault(); signupView.style.display = 'none'; loginView.style.display = 'flex'; });
+document.getElementById('signupFormElem')?.addEventListener('submit', (e) => { e.preventDefault(); const name = document.getElementById('signupName').value, email = document.getElementById('signupEmail').value, pwd = document.getElementById('signupPassword').value, confirm = document.getElementById('confirmPwd').value; if (pwd !== confirm) { alert("Passwords mismatch"); return; } let users = getUsers(); if (users.find(u => u.email === email)) { alert("Email exists"); return; } const newUser = { id: "u" + Date.now(), name, email, password: pwd, gender: document.getElementById('signupGender').value, age: parseInt(document.getElementById('signupAge').value) || 22, bio: "New here!", interests: [], location: "Unknown", profilePic: "https://randomuser.me/api/portraits/lego/1.jpg", likedBy: [], swipedRight: [], swipedLeft: [], matches: [], profileViews: 0, likesReceived: 0, isPremium: false, lastSeen: new Date().toISOString(), online: true }; users.push(newUser); saveUsers(users); alert("Account created! Please login."); signupView.style.display = 'none'; loginView.style.display = 'flex'; });
+function loginUser(email, pwd) { const users = getUsers(); const user = users.find(u => u.email === email && u.password === pwd); if (user) { currentUser = JSON.parse(JSON.stringify(user)); localStorage.setItem('currentUser', JSON.stringify(currentUser)); return true; } return false; }
+document.getElementById('loginFormElem')?.addEventListener('submit', (e) => { e.preventDefault(); if (loginUser(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value)) showMainApp(); else alert("Invalid credentials"); });
+function showMainApp() { loginView.style.display = 'none'; signupView.style.display = 'none'; mainApp.style.display = 'block'; loadCurrentUser(); renderAll(); attachNavEvents(); renderSwipeCards(); renderChatList(); }
+function loadCurrentUser() { const stored = localStorage.getItem('currentUser'); if (stored) currentUser = JSON.parse(stored); else window.location.reload(); }
+
+// Swipe & Explore
+function getAvailableProfiles() { const users = getUsers(); return users.filter(u => u.id !== currentUser.id && !currentUser.swipedRight?.includes(u.id) && !currentUser.swipedLeft?.includes(u.id)); }
+function renderSwipeCards() { let available = getAvailableProfiles(); if(available.length===0){ document.getElementById('cardsStack').innerHTML=`<div class="glass-card" style="padding:30px;text-align:center;">✨ No more profiles ✨</div>`; return; } let idx=0; const container=document.getElementById('cardsStack'); function display(){ if(idx>=available.length) return; const p=available[idx]; container.innerHTML=`<div class="swipe-card"><img class="card-img" src="${p.profilePic}"><h3 style="color:white;">${p.name},${p.age}</h3><p>${p.bio}</p></div>`; } display(); document.getElementById('likeBtn').onclick=()=>{ if(idx>=available.length) return; let users=getUsers(); let curr=users.find(u=>u.id===currentUser.id), target=users.find(u=>u.id===available[idx].id); curr.swipedRight.push(target.id); if(target.likedBy.includes(curr.id)){ curr.matches.push(target.id); target.matches.push(curr.id); alert(`✨ Matched with ${target.name}! ✨`); }else{ target.likedBy.push(curr.id); } updateCurrentUserInDB(curr); saveUsers(users); idx++; if(idx<available.length) display(); else renderSwipeCards(); renderProfileUI(); renderChatList(); }; document.getElementById('passBtn').onclick=()=>{ idx++; if(idx<available.length) display(); else renderSwipeCards(); }; }
+function renderExplore(){ let users=getUsers(); let filtered=users.filter(u=>u.id!==currentUser.id); const maxAge=parseInt(document.getElementById('filterAge').value)||100,gender=document.getElementById('filterGender').value; if(gender) filtered=filtered.filter(u=>u.gender===gender); filtered=filtered.filter(u=>u.age<=maxAge); document.getElementById('exploreList').innerHTML=filtered.map(u=>`<div class="explore-card"><img src="${u.profilePic}" width="80" style="border-radius:50%;"><h4>${u.name},${u.age}</h4><button class="small-glass explore-like" data-id="${u.id}">Like</button></div>`).join(''); document.querySelectorAll('.explore-like').forEach(btn=>btn.addEventListener('click',()=>{ let targetId=btn.dataset.id; let users=getUsers(); let curr=users.find(u=>u.id===currentUser.id), target=users.find(u=>u.id===targetId); curr.swipedRight.push(targetId); if(target.likedBy.includes(curr.id)){ curr.matches.push(targetId); target.matches.push(curr.id); alert(`Matched with ${target.name}!`); }else{ target.likedBy.push(curr.id); } updateCurrentUserInDB(curr); saveUsers(users); renderExplore(); renderProfileUI(); renderChatList(); })); }
+
+// FULL MESSAGING (WhatsApp-style)
+let currentChatPartner = null, typingTimeout = null, replyToMessage = null;
+function renderChatList() {
+    const container = document.getElementById('chatListContainer');
+    const matches = getUsers().filter(u => currentUser.matches.includes(u.id));
+    if(matches.length===0){ container.innerHTML=`<div class="glass-card" style="padding:20px;text-align:center;">No matches yet. Start swiping!</div>`; return; }
+    const messagesStore = getMessagesStore();
+    const listHtml = matches.map(m => {
+        const chatKey = [currentUser.id, m.id].sort().join('_');
+        const msgs = messagesStore[chatKey] || [];
+        const lastMsg = msgs[msgs.length-1];
+        const lastText = lastMsg ? (lastMsg.senderId === currentUser.id ? "You: " : "") + lastMsg.text.substring(0, 30) : "Say hi!";
+        const time = lastMsg ? new Date(lastMsg.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "";
+        const unread = msgs.filter(msg => msg.senderId === m.id && msg.status !== "read").length;
+        return `<div class="chat-list-item" data-id="${m.id}"><div style="position:relative;"><img class="avatar" src="${m.profilePic}">${m.online ? '<span class="online-dot"></span>' : ''}</div><div class="chat-info"><div class="chat-name">${m.name}</div><div class="last-msg">${lastText}</div></div><div class="chat-meta"><div class="time">${time}</div>${unread ? `<div class="unread-badge">${unread}</div>` : ''}</div></div>`;
+    }).join('');
+    container.innerHTML = `<div class="search-bar"><i class="fas fa-search"></i><input type="text" placeholder="Search chats..." id="searchChatInput"></div>${listHtml}`;
+    document.getElementById('searchChatInput')?.addEventListener('input', (e) => { const term = e.target.value.toLowerCase(); document.querySelectorAll('.chat-list-item').forEach(el => { const name = el.querySelector('.chat-name')?.innerText.toLowerCase(); el.style.display = name?.includes(term) ? 'flex' : 'none'; }); });
+    document.querySelectorAll('.chat-list-item').forEach(el => el.addEventListener('click', () => openChatScreen(el.dataset.id)));
+}
+function openChatScreen(partnerId) {
+    currentChatPartner = partnerId;
+    const users = getUsers();
+    const partner = users.find(u => u.id === partnerId);
+    document.getElementById('chatListContainer').style.display = 'none';
+    const screenDiv = document.getElementById('chatScreenContainer');
+    screenDiv.style.display = 'block';
+    screenDiv.innerHTML = `
+        <div class="chat-header"><button class="back-btn" id="backToChatList"><i class="fas fa-arrow-left"></i></button><div class="chat-profile"><img src="${partner.profilePic}" id="chatAvatar"><div><div class="chat-name">${partner.name}</div><div class="chat-status" id="chatStatus">${partner.online ? 'Online' : 'Offline'}</div></div></div><div class="chat-actions"><i class="fas fa-phone" id="callDemo"></i><i class="fas fa-video" id="videoDemo"></i><i class="fas fa-ellipsis-v" id="menuUnmatch"></i></div></div>
+        <div class="messages-area" id="messagesArea"></div>
+        <div id="typingIndicatorArea" class="typing-indicator" style="display:none;"><span>typing</span><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div><i class="fas fa-lock" style="margin-left:8px; font-size:0.7rem;" title="Premium feature"></i></div>
+        <div class="reply-preview" id="replyPreview"></div>
+        <div class="input-area"><i class="far fa-smile-wink" id="emojiBtn" style="font-size:1.5rem; color:white;"></i><i class="fas fa-paperclip" id="attachBtn" style="font-size:1.3rem; color:white;"></i><input type="text" id="messageInputChat" placeholder="Type a message..."><button id="sendChatMsg"><i class="fas fa-paper-plane"></i></button></div>
+    `;
+    document.getElementById('backToChatList').addEventListener('click', () => { screenDiv.style.display = 'none'; document.getElementById('chatListContainer').style.display = 'block'; currentChatPartner = null; replyToMessage = null; renderChatList(); });
+    document.getElementById('callDemo')?.addEventListener('click', () => alert("Call UI demo"));
+    document.getElementById('videoDemo')?.addEventListener('click', () => alert("Video call demo"));
+    document.getElementById('menuUnmatch')?.addEventListener('click', () => { if(confirm(`Unmatch ${partner.name}?`)){ let users = getUsers(); let curr = users.find(u=>u.id===currentUser.id); curr.matches = curr.matches.filter(id => id !== partnerId); updateCurrentUserInDB(curr); saveUsers(users); alert("Unmatched"); document.getElementById('backToChatList').click(); renderChatList(); } });
+    document.getElementById('chatAvatar')?.addEventListener('click', () => alert(`Quick view: ${partner.name}, ${partner.age}\n${partner.bio}`));
+    loadMessagesForChat(partnerId);
+    const input = document.getElementById('messageInputChat');
+    input?.addEventListener('focus', () => simulateTyping(partnerId));
+    document.getElementById('sendChatMsg')?.addEventListener('click', () => sendMessage(partnerId));
+    input?.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(partnerId); });
+    document.getElementById('messagesArea')?.addEventListener('dblclick', (e) => { let msgDiv = e.target.closest('.message-bubble'); if(msgDiv && msgDiv.classList.contains('sent')) alert("❤️ You liked this message"); });
+    let touchStartX = 0;
+    document.getElementById('messagesArea')?.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+    document.getElementById('messagesArea')?.addEventListener('touchend', (e) => { if(touchStartX - e.changedTouches[0].clientX > 50) { let msgDiv = e.target.closest('.message-bubble'); if(msgDiv){ let msgText = msgDiv.querySelector('.message-text')?.innerText; replyToMessage = msgText; document.getElementById('replyPreview').innerHTML = `Replying: "${msgText.substring(0,30)}" <i class="fas fa-times-circle" id="cancelReply"></i>`; document.getElementById('replyPreview').style.display = 'block'; document.getElementById('cancelReply')?.addEventListener('click',()=>{ replyToMessage=null; document.getElementById('replyPreview').style.display='none'; }); } } });
+}
+function simulateTyping(partnerId) {
+    const typingDiv = document.getElementById('typingIndicatorArea');
+    if(typingDiv) typingDiv.style.display = 'flex';
+    if(typingTimeout) clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(() => { if(typingDiv) typingDiv.style.display = 'none'; }, 2000);
+}
+function loadMessagesForChat(partnerId) {
+    const chatKey = [currentUser.id, partnerId].sort().join('_');
+    let store = getMessagesStore();
+    let messages = store[chatKey] || [];
+    const area = document.getElementById('messagesArea');
+    function renderMessages() {
+        area.innerHTML = messages.map(msg => {
+            const isSent = msg.senderId === currentUser.id;
+            const time = new Date(msg.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            let statusIcon = '';
+            if(isSent && msg.status === 'sent') statusIcon = '✓';
+            else if(isSent && msg.status === 'delivered') statusIcon = '✓✓';
+            else if(isSent && msg.status === 'read') statusIcon = '✓✓ (blue)';
+            return `<div class="message-bubble ${isSent ? 'sent' : 'received'}"><div class="message-text">${msg.text}</div><div class="message-time">${time} ${isSent ? `<span class="message-status">${statusIcon}</span>` : ''}</div></div>`;
+        }).join('');
+        area.scrollTop = area.scrollHeight;
+    }
+    renderMessages();
+    let updated = false;
+    messages.forEach(msg => { if(msg.senderId === partnerId && msg.status !== 'read') { msg.status = 'read'; updated = true; } });
+    if(updated) { store[chatKey] = messages; saveMessagesStore(store); renderMessages(); }
+}
+function sendMessage(partnerId) {
+    const input = document.getElementById('messageInputChat');
+    const text = input.value.trim();
+    if(!text) return;
+    const chatKey = [currentUser.id, partnerId].sort().join('_');
+    let store = getMessagesStore();
+    let messages = store[chatKey] || [];
+    const newMsg = { id: "m"+Date.now(), senderId: currentUser.id, text: text, timestamp: Date.now(), status: 'sent' };
+    messages.push(newMsg);
+    store[chatKey] = messages;
+    saveMessagesStore(store);
+    input.value = '';
+    loadMessagesForChat(partnerId);
+    setTimeout(() => {
+        let store2 = getMessagesStore();
+        let msgs = store2[chatKey] || [];
+        const replyText = "Thanks for your message! 😊 (auto-reply)";
+        const autoReply = { id: "m"+Date.now(), senderId: partnerId, text: replyText, timestamp: Date.now(), status: 'delivered' };
+        msgs.push(autoReply);
+        store2[chatKey] = msgs;
+        saveMessagesStore(store2);
+        if(currentChatPartner === partnerId) loadMessagesForChat(partnerId);
+        else renderChatList();
+    }, 2000);
+    renderChatList();
+}
+
+// PROFILE & SETTINGS
+function updateProfileCompletion() { const fields = [currentUser.name, currentUser.bio, currentUser.location, currentUser.interests?.length]; let filled = fields.filter(f => f && (Array.isArray(f) ? f.length>0 : true)).length; let percent = (filled/4)*100; document.getElementById('profileProgress').style.width = percent+'%'; }
+function renderProfileUI() {
+    document.getElementById('profileUsername').innerText = currentUser.name;
+    document.getElementById('profileStatus').innerText = currentUser.bio || "Hey there!";
+    document.getElementById('profileAvatar').src = currentUser.profilePic;
+    document.getElementById('matchesCount').innerText = currentUser.matches?.length || 0;
+    document.getElementById('likesCount').innerText = currentUser.likesReceived || 0;
+    document.getElementById('viewsCount').innerText = currentUser.profileViews || 0;
+    const lastSeenDate = currentUser.lastSeen ? new Date(currentUser.lastSeen).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "recently";
+    document.getElementById('lastSeenPreview').innerText = `Last seen today at ${lastSeenDate}`;
+    updateProfileCompletion();
+    const settingsList = [
+        { icon: "fas fa-user-circle", title: "Account", key: "account" }, { icon: "fas fa-lock", title: "Privacy", key: "privacy" }, { icon: "fas fa-bell", title: "Notifications", key: "notifications" }, { icon: "fas fa-comment-dots", title: "Chats", key: "chats" }, { icon: "fas fa-palette", title: "Appearance", key: "appearance" }, { icon: "fas fa-heart", title: "Dating Preferences", key: "dating" }, { icon: "fas fa-crown", title: "Premium Features", key: "premium" }, { icon: "fas fa-question-circle", title: "Help & Support", key: "help" }
+    ];
+    document.getElementById('settingsListContainer').innerHTML = settingsList.map(s => `<div class="settings-item" data-key="${s.key}"><div class="settings-item-left"><i class="${s.icon}" style="width:24px"></i><span>${s.title}</span></div><i class="fas fa-chevron-right"></i></div>`).join('');
+    document.querySelectorAll('.settings-item').forEach(el => el.addEventListener('click', () => showSettingsDetail(el.dataset.key)));
+    document.getElementById('openSettingsBtn').onclick = () => showSettingsDetail('account');
+    document.getElementById('editProfileBtn').onclick = () => { document.getElementById('profileView').classList.remove('active-view'); document.getElementById('editProfileView').style.display = 'block'; loadEditProfile(); };
+    document.getElementById('shareProfileBtn').onclick = () => alert("Share profile link (demo)");
+    document.getElementById('boostProfileBtn').onclick = () => alert("✨ Boost mode activated (premium UI)");
+    document.getElementById('changePhotoBtn').onclick = () => document.getElementById('photoUploadInput').click();
+    document.getElementById('photoUploadInput').onchange = (e) => { if(e.target.files[0]){ const reader = new FileReader(); reader.onload = ev => { document.getElementById('profileAvatar').src = ev.target.result; currentUser.profilePic = ev.target.result; updateCurrentUserInDB(currentUser); }; reader.readAsDataURL(e.target.files[0]); } };
+    document.getElementById('logoutBtnProfile').onclick = () => { localStorage.removeItem('currentUser'); window.location.reload(); };
+}
+function loadEditProfile() {
+    document.getElementById('editName').value = currentUser.name;
+    document.getElementById('editBio').value = currentUser.bio;
+    document.getElementById('editGender').value = currentUser.gender;
+    document.getElementById('editAge').value = currentUser.age;
+    document.getElementById('editLocation').value = currentUser.location;
+    const interests = currentUser.interests || [];
+    const container = document.getElementById('interestsContainer');
+    function renderTags() { container.innerHTML = interests.map((tag,i) => `<span class="tag">${tag} <i class="fas fa-times-circle remove-tag" data-index="${i}"></i></span>`).join(''); document.querySelectorAll('.remove-tag').forEach(btn => btn.addEventListener('click', (e) => { const idx = parseInt(btn.dataset.index); interests.splice(idx,1); renderTags(); })); }
+    renderTags();
+    document.getElementById('newInterestInput').onkeypress = (e) => { if(e.key === 'Enter' && e.target.value.trim()){ interests.push(e.target.value.trim()); renderTags(); e.target.value = ''; } };
+    document.getElementById('photoGrid').innerHTML = `<img src="${currentUser.profilePic}"><div class="small-glass" style="display:flex; align-items:center;">+ Add</div>`;
+    document.getElementById('saveProfileChanges').onclick = () => { currentUser.name = document.getElementById('editName').value; currentUser.bio = document.getElementById('editBio').value; currentUser.gender = document.getElementById('editGender').value; currentUser.age = parseInt(document.getElementById('editAge').value); currentUser.location = document.getElementById('editLocation').value; currentUser.interests = interests; updateCurrentUserInDB(currentUser); alert("Profile updated"); document.getElementById('backFromEdit').click(); };
+    document.getElementById('backFromEdit').onclick = () => { document.getElementById('editProfileView').style.display = 'none'; document.getElementById('profileView').classList.add('active-view'); renderProfileUI(); };
+}
+function showSettingsDetail(section) {
+    document.getElementById('profileView').classList.remove('active-view');
+    document.getElementById('settingsDetailView').style.display = 'block';
+    document.getElementById('settingsTitle').innerText = section.charAt(0).toUpperCase() + section.slice(1);
+    let content = '';
+    const settings = JSON.parse(localStorage.getItem('appSettings') || '{}');
+    const prefs = JSON.parse(localStorage.getItem('datingPreferences') || '{}');
+    if (section === 'account') content = `<div class="settings-item"><div>Change email/phone</div><i class="fas fa-chevron-right"></i></div><div class="settings-item"><div>Update password</div><i class="fas fa-chevron-right"></i></div><div class="settings-item"><div>Two-factor authentication</div><div class="toggle-switch" id="2faToggle"><div class="toggle-knob"></div></div></div>`;
+    else if (section === 'privacy') content = `<div class="settings-item"><div>Last seen</div><div class="toggle-switch ${settings.lastSeen ? 'active' : ''}" id="lastSeenToggle"><div class="toggle-knob"></div></div></div><div class="settings-item"><div>Online status</div><div class="toggle-switch ${settings.onlineStatus ? 'active' : ''}" id="onlineStatusToggle"><div class="toggle-knob"></div></div></div><div class="settings-item"><div>Profile visibility</div><div class="toggle-switch ${settings.profileVisibility === 'public' ? 'active' : ''}" id="visibilityToggle"><div class="toggle-knob"></div></div></div><div class="settings-item"><div>Blocked users</div><i class="fas fa-chevron-right"></i></div>`;
+    else if (section === 'notifications') content = `<div class="settings-item"><div>Message notifications</div><div class="toggle-switch ${settings.messageNotif ? 'active' : ''}" id="notifToggle"><div class="toggle-knob"></div></div></div><div class="settings-item"><div>Match alerts</div><div class="toggle-switch active"><div class="toggle-knob"></div></div></div>`;
+    else if (section === 'chats') content = `<div class="settings-item"><div>Chat backup</div><i class="fas fa-chevron-right"></i></div><div class="settings-item"><div>Clear chat history</div><i class="fas fa-chevron-right"></i></div>`;
+    else if (section === 'appearance') content = `<div class="settings-item"><div>Dark mode</div><div class="toggle-switch" id="darkModeToggle"><div class="toggle-knob"></div></div></div><div class="settings-item"><div>Theme color</div><select><option>Green</option><option>Blue</option></select></div>`;
+    else if (section === 'dating') content = `<div class="settings-item"><div>Age range</div><div class="slider-container"><span>${prefs.ageMin}</span><input type="range" id="ageMinSlider" min="18" max="60" value="${prefs.ageMin}"><span>${prefs.ageMax}</span><input type="range" id="ageMaxSlider" min="18" max="60" value="${prefs.ageMax}"></div></div><div class="settings-item"><div>Distance radius (km)</div><input type="range" id="distanceSlider" min="5" max="100" value="${prefs.distance}"><span id="distanceVal">${prefs.distance}</span></div><button class="small-glass" id="savePrefsBtn">Save Preferences</button>`;
+    else if (section === 'premium') content = `<div class="premium-card"><i class="fas fa-crown" style="font-size:2rem; color:gold;"></i><h3>Get Verified</h3><p>Blue check badge & priority</p><button class="small-glass" id="verifyBtn">Upgrade Now</button><hr><div><i class="fas fa-lock"></i> See who liked you 🔒<br><i class="fas fa-infinity"></i> Unlimited swipes</div></div>`;
+    else if (section === 'help') content = `<div class="settings-item">FAQ</div><div class="settings-item">Contact support</div><div class="settings-item">Report a problem</div>`;
+    document.getElementById('settingsDetailContent').innerHTML = content;
+    document.querySelectorAll('.toggle-switch').forEach(t => t.addEventListener('click', function(e){ e.stopPropagation(); this.classList.toggle('active'); let val = this.classList.contains('active'); if(this.id === 'lastSeenToggle') settings.lastSeen = val; else if(this.id === 'onlineStatusToggle') settings.onlineStatus = val; else if(this.id === 'visibilityToggle') settings.profileVisibility = val ? 'public' : 'matches'; else if(this.id === 'notifToggle') settings.messageNotif = val; else if(this.id === 'darkModeToggle') alert("Dark mode demo"); localStorage.setItem('appSettings', JSON.stringify(settings)); }));
+    if(document.getElementById('ageMinSlider')){ document.getElementById('ageMinSlider').oninput = () => { prefs.ageMin = parseInt(document.getElementById('ageMinSlider').value); localStorage.setItem('datingPreferences', JSON.stringify(prefs)); showSettingsDetail('dating'); }; }
+    if(document.getElementById('ageMaxSlider')){ document.getElementById('ageMaxSlider').oninput = () => { prefs.ageMax = parseInt(document.getElementById('ageMaxSlider').value); localStorage.setItem('datingPreferences', JSON.stringify(prefs)); showSettingsDetail('dating'); }; }
+    if(document.getElementById('distanceSlider')){ document.getElementById('distanceSlider').oninput = () => { let val = document.getElementById('distanceSlider').value; document.getElementById('distanceVal').innerText = val; prefs.distance = val; localStorage.setItem('datingPreferences', JSON.stringify(prefs)); }; }
+    if(document.getElementById('savePrefsBtn')) document.getElementById('savePrefsBtn').onclick = () => alert("Preferences saved");
+    if(document.getElementById('verifyBtn')) document.getElementById('verifyBtn').onclick = () => alert("Premium upgrade (UI demo)");
+    document.getElementById('backFromSettings').onclick = () => { document.getElementById('settingsDetailView').style.display = 'none'; document.getElementById('profileView').classList.add('active-view'); renderProfileUI(); };
+}
+function attachNavEvents() {
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const viewId = item.dataset.nav;
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active-view'));
+            document.getElementById(viewId + 'View').classList.add('active-view');
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            item.classList.add('active');
+            if(viewId === 'messages') { document.getElementById('chatListContainer').style.display = 'block'; document.getElementById('chatScreenContainer').style.display = 'none'; renderChatList(); currentChatPartner = null; }
+            if(viewId === 'explore') renderExplore();
+            if(viewId === 'profile') renderProfileUI();
+            if(viewId === 'swipe') renderSwipeCards();
+            document.getElementById('editProfileView').style.display = 'none';
+            document.getElementById('settingsDetailView').style.display = 'none';
+        });
+    });
+    document.querySelector('.nav-item[data-nav="swipe"]').classList.add('active');
+}
+function renderAll() { renderProfileUI(); renderChatList(); renderExplore(); }
+
+// Initialization
+initDummyData();
+if(localStorage.getItem('currentUser')) { currentUser = JSON.parse(localStorage.getItem('currentUser')); showMainApp(); } else { document.getElementById('loginView').style.display = 'flex'; }
+document.querySelectorAll('.toggle-pwd').forEach(icon=>{ icon.addEventListener('click',function(){ let target=document.getElementById(this.dataset.target); if(target.type==='password') target.type='text'; else target.type='password'; this.classList.toggle('fa-eye');}); });
+document.getElementById('applyFilterBtn')?.addEventListener('click',()=>renderExplore());
