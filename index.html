@@ -3,414 +3,424 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-  <title>Connectly · Modern Dating</title>
-  <!-- Tailwind + Font Awesome + Google Fonts -->
+  <title>Connectly · Full Profile Control</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
-  <!-- Custom Swipe & Chat Sim -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     * { font-family: 'Inter', sans-serif; }
-    body {
-      transition: background 0.2s, color 0.2s;
-      overflow-x: hidden;
-    }
-    .dark body {
-      background-color: #121212;
-      color: #f0f0f0;
-    }
-    .card-swipe {
-      transition: transform 0.3s ease, opacity 0.2s;
-      cursor: grab;
-    }
-    .card-swipe:active { cursor: grabbing; }
-    .swipe-left { transform: translateX(-120%) rotate(-12deg); opacity: 0; }
-    .swipe-right { transform: translateX(120%) rotate(12deg); opacity: 0; }
-    .online-dot {
-      width: 10px; height: 10px; background-color: #10b981;
-      border-radius: 50%; display: inline-block;
-    }
-    .typing-indicator span {
-      background: #9ca3af;
-      border-radius: 50%;
-      display: inline-block;
-      width: 6px; height: 6px;
-      animation: blink 1.4s infinite both;
-    }
-    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes blink {
-      0%, 80%, 100% { opacity: 0.2; transform: scale(0.8);}
-      40% { opacity: 1; transform: scale(1);}
-    }
-    .hide-scrollbar::-webkit-scrollbar { display: none; }
-    .message-bubble {
-      max-width: 75%;
-      word-wrap: break-word;
-    }
-    .transition-all-smooth { transition: all 0.2s ease; }
-    .swipe-container { touch-action: pan-y pinch-zoom; }
+    body { transition: background 0.2s, color 0.2s; overflow-x: hidden; }
+    .dark body { background-color: #121212; color: #f0f0f0; }
+    .card-swipe { transition: transform 0.3s ease, opacity 0.2s; cursor: grab; touch-action: pan-y; }
+    .message-bubble-user { background-color: #e5e5e5; color: #111; border-radius: 20px; border-bottom-right-radius: 4px; }
+    .dark .message-bubble-user { background-color: #2d2d2d; color: #f0f0f0; }
+    .message-bubble-ai { background-color: #ec4899; color: white; border-radius: 20px; border-bottom-left-radius: 4px; }
+    .online-dot { width: 10px; height: 10px; background-color: #10b981; border-radius: 50%; display: inline-block; }
+    .pink-tick { color: #ec4899; font-size: 0.9rem; margin-left: 4px; }
+    .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; z-index:1000; }
+    .modal-card { max-width:90%; width:320px; border-radius:28px; background:white; color:#1f2937; transition:0.2s; }
+    .dark .modal-card { background:#1f2937; color:#f3f4f6; }
+    .profile-setting-item { transition:0.15s; cursor:pointer; }
+    .profile-setting-item:active { background-color: rgba(236,72,153,0.1); }
+    input, select, textarea { background-color: #f9fafb; }
+    .dark input, .dark select, .dark textarea { background-color: #374151; color: white; border-color: #4b5563; }
   </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
 
-  <!-- AUTH MODAL / MAIN CONTAINER -->
+  <!-- AUTH MODAL -->
   <div id="authContainer" class="min-h-screen flex items-center justify-center p-4">
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full p-6">
-      <div class="text-center mb-6">
-        <i class="fas fa-heart text-4xl text-pink-500"></i>
-        <h1 class="text-3xl font-bold mt-2">Connectly</h1>
-        <p class="text-gray-500 dark:text-gray-400">Find your spark</p>
-      </div>
-      <!-- Login / Register Tabs -->
+      <div class="text-center mb-6"><i class="fas fa-heart text-4xl text-pink-500"></i><h1 class="text-3xl font-bold mt-2">Connectly</h1><p class="text-gray-500">Real connections, real chat</p></div>
       <div class="flex gap-2 mb-5 border-b dark:border-gray-700">
         <button id="loginTabBtn" class="flex-1 py-2 font-semibold text-pink-500 border-b-2 border-pink-500">Login</button>
         <button id="registerTabBtn" class="flex-1 py-2 font-semibold text-gray-500">Register</button>
       </div>
-      <!-- Login Form -->
       <div id="loginForm">
-        <input type="text" id="loginEmail" placeholder="Email / Phone" class="w-full p-3 border rounded-xl mb-3 dark:bg-gray-700 dark:border-gray-600">
+        <input type="text" id="loginEmail" placeholder="Email / Phone" class="w-full p-3 border rounded-xl mb-3 dark:bg-gray-700">
         <input type="password" id="loginPassword" placeholder="Password" class="w-full p-3 border rounded-xl mb-4 dark:bg-gray-700">
         <button id="doLoginBtn" class="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 rounded-xl transition">Sign In</button>
-        <p class="text-center text-sm mt-4 text-gray-500">Demo: admin@connectly.com / admin123<br>or user1@demo.com / 123456</p>
+        <div class="relative my-4"><div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-300"></div></div><div class="relative flex justify-center text-sm"><span class="px-2 bg-white dark:bg-gray-800 text-gray-500">Or</span></div></div>
+        <button id="googleSignInBtn" class="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl py-3 flex items-center justify-center gap-2 hover:bg-gray-200 transition"><i class="fab fa-google text-red-500"></i> Sign in with Google</button>
+        <p class="text-center text-sm mt-4 text-gray-500">Demo: admin@connectly.com / admin123<br>or miranda@connectly.com / demo123</p>
       </div>
-      <!-- Register Form (hidden) -->
       <div id="registerForm" class="hidden">
         <input type="text" id="regName" placeholder="Full name" class="w-full p-3 border rounded-xl mb-3 dark:bg-gray-700">
-        <input type="email" id="regEmail" placeholder="Email" class="w-full p-3 border rounded-xl mb-3">
-        <input type="password" id="regPassword" placeholder="Password" class="w-full p-3 border rounded-xl mb-3">
-        <input type="number" id="regAge" placeholder="Age" class="w-full p-3 border rounded-xl mb-3">
-        <select id="regGender" class="w-full p-3 border rounded-xl mb-3">
-          <option value="female">Female</option><option value="male">Male</option><option value="non-binary">Non-binary</option>
-        </select>
-        <input type="text" id="regLocation" placeholder="City" class="w-full p-3 border rounded-xl mb-3">
+        <input type="email" id="regEmail" placeholder="Email" class="w-full p-3 border rounded-xl mb-3 dark:bg-gray-700">
+        <input type="password" id="regPassword" placeholder="Password" class="w-full p-3 border rounded-xl mb-3 dark:bg-gray-700">
+        <input type="number" id="regAge" placeholder="Age" class="w-full p-3 border rounded-xl mb-3 dark:bg-gray-700">
+        <select id="regGender" class="w-full p-3 border rounded-xl mb-3 dark:bg-gray-700"><option value="female">Female</option><option value="male">Male</option><option value="non-binary">Non-binary</option></select>
+        <input type="text" id="regLocation" placeholder="City" class="w-full p-3 border rounded-xl mb-3 dark:bg-gray-700">
         <button id="doRegisterBtn" class="w-full bg-pink-500 text-white font-bold py-3 rounded-xl">Create Account</button>
       </div>
     </div>
   </div>
 
-  <!-- MAIN APP (hidden until login) -->
+  <!-- MAIN APP -->
   <div id="appContainer" class="hidden max-w-lg mx-auto bg-gray-50 dark:bg-gray-900 min-h-screen relative pb-20">
-    <!-- Top bar with theme toggle & logout -->
-    <div class="flex justify-between items-center p-4 bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-10">
-      <h2 class="text-xl font-bold"><i class="fas fa-heart text-pink-500"></i> Connectly</h2>
-      <div class="flex gap-3">
-        <button id="themeToggle" class="text-xl"><i class="fas fa-moon dark:hidden"></i><i class="fas fa-sun hidden dark:inline"></i></button>
-        <button id="logoutBtn" class="text-sm bg-gray-200 dark:bg-gray-700 px-3 py-1 rounded-full"><i class="fas fa-sign-out-alt"></i></button>
-      </div>
-    </div>
-    <!-- Bottom Navigation -->
+    <div class="flex justify-between items-center p-4 bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-10"><h2 class="text-xl font-bold"><i class="fas fa-heart text-pink-500"></i> Connectly</h2><div class="flex gap-3"><button id="themeToggle" class="text-xl"><i class="fas fa-moon dark:hidden"></i><i class="fas fa-sun hidden dark:inline"></i></button><button id="logoutBtn" class="text-sm bg-gray-200 dark:bg-gray-700 px-3 py-1 rounded-full"><i class="fas fa-sign-out-alt"></i></button></div></div>
     <div class="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-white dark:bg-gray-800 border-t dark:border-gray-700 flex justify-around py-2 z-20">
-      <button data-nav="discover" class="nav-btn text-2xl text-gray-500 dark:text-gray-400"><i class="fas fa-compass"></i></button>
+      <button data-nav="discover" class="nav-btn text-2xl text-gray-500"><i class="fas fa-compass"></i></button>
       <button data-nav="matches" class="nav-btn text-2xl"><i class="fas fa-heart"></i></button>
       <button data-nav="messages" class="nav-btn text-2xl"><i class="fas fa-comment-dots"></i></button>
       <button data-nav="profile" class="nav-btn text-2xl"><i class="fas fa-user"></i></button>
-      <button data-nav="premium" class="nav-btn text-2xl"><i class="fas fa-crown"></i></button>
-      <button data-nav="admin" id="adminNavBtn" class="nav-btn text-2xl hidden"><i class="fas fa-shield-alt"></i></button>
+      <button data-nav="vip" class="nav-btn text-2xl"><i class="fas fa-gem text-pink-500"></i></button>
     </div>
 
-    <!-- Pages -->
     <div id="discoverPage" class="p-3 active-page"></div>
     <div id="matchesPage" class="p-3 hidden"></div>
     <div id="messagesPage" class="p-3 hidden"></div>
     <div id="profilePage" class="p-3 hidden"></div>
-    <div id="premiumPage" class="p-3 hidden"></div>
-    <div id="adminPage" class="p-3 hidden"></div>
+    <div id="vipPage" class="p-3 hidden"></div>
   </div>
 
   <script>
-    // ---------- DATA MODEL ----------
+    // ---------- DATABASE ----------
     let currentUser = null;
     let users = []; let swipes = []; let matches = []; let messages = []; let reports = [];
-    const STORAGE_KEYS = { users: 'connectly_users', swipes: 'connectly_swipes', matches: 'connectly_matches', messages: 'connectly_messages', reports: 'connectly_reports' };
+    const STORAGE = { users: 'connectly_users_v2', swipes: 'connectly_swipes_v2', matches: 'connectly_matches_v2', messages: 'connectly_messages_v2', reports: 'connectly_reports_v2' };
+
+    function isFakeEmail(email) { 
+      let domain = email.split('@')[1]; 
+      const fake = ['tempmail.com','mailinator.com','guerrillamail.com','10minutemail.com','throwaway.com','fakeinbox.com','trashmail.com']; 
+      return fake.includes(domain) || domain.includes('temp') || domain.includes('fake'); 
+    }
+
+    // Default user template with all required fields
+    function createUserTemplate(id, email, password, name, age, gender, location, isVerified = false, isPremium = false) {
+      return {
+        id, email, password: btoa(password), name, bio: 'Excited to meet new people!', age, gender, 
+        preferences: gender === 'male' ? 'female' : 'male', interests: [], location, 
+        photos: ['https://randomuser.me/api/portraits/lego/1.jpg'], isVerified, isPremium, isAdmin: false, 
+        isBanned: false, blockedUsers: [], privacySettings: {}, onlineStatus: true, lastActive: Date.now(),
+        address: '', notificationsEnabled: true, devices: [], language: 'English'
+      };
+    }
+
+    const AI_BOT = {
+      id:'ai_connectly_bot', email:'ai@connectly.com', password:btoa('ai_bot_no_login'), name:'Connectly AI', 
+      bio:'Your AI dating assistant 🤖✨', age:22, gender:'non-binary', preferences:'all', interests:['AI','Dating tips','Conversation'], 
+      location:'Global', photos:['https://randomuser.me/api/portraits/women/68.jpg'], isVerified:true, isPremium:true, 
+      isAdmin:false, isBanned:false, blockedUsers:[], privacySettings:{}, onlineStatus:true, lastActive:Date.now(),
+      address:'', notificationsEnabled:true, devices:[], language:'English'
+    };
 
     function initMockData() {
-      if(!localStorage.getItem(STORAGE_KEYS.users)){
-        const defaultUsers = [
-          { id: 'u1', email: 'admin@connectly.com', password: btoa('admin123'), name: 'Admin', bio: 'Platform admin', age: 28, gender: 'male', preferences: 'female', interests: ['Tech','Admin'], location: 'NYC', photos: ['https://randomuser.me/api/portraits/men/1.jpg'], isVerified: true, isPremium: true, isAdmin: true, isBanned: false, isBoosted: false, likesReceived: [], swipesGiven: [], matches: [], blockedUsers: [], privacySettings: { hideProfile: false, visibility: 'public' }, onlineStatus: true, lastActive: Date.now(), verificationRequest: false },
-          { id: 'u2', email: 'emma@demo.com', password: btoa('123456'), name: 'Emma', bio: 'Love travel & hiking', age: 24, gender: 'female', preferences: 'male', interests: ['Travel','Music','Fitness'], location: 'Austin', photos: ['https://randomuser.me/api/portraits/women/2.jpg'], isVerified: false, isPremium: false, isAdmin: false, isBanned: false, isBoosted: false, likesReceived: [], swipesGiven: [], matches: [], blockedUsers: [], privacySettings: { hideProfile: false, visibility: 'public' }, onlineStatus: true, lastActive: Date.now() },
-          { id: 'u3', email: 'james@demo.com', password: btoa('123456'), name: 'James', bio: 'Chef & foodie', age: 27, gender: 'male', preferences: 'female', interests: ['Cooking','Movies','Travel'], location: 'LA', photos: ['https://randomuser.me/api/portraits/men/3.jpg'], isVerified: false, isPremium: false, isAdmin: false, isBanned: false, isBoosted: false, likesReceived: [], swipesGiven: [], matches: [], blockedUsers: [], privacySettings: {}, onlineStatus: true, lastActive: Date.now() },
-          { id: 'u4', email: 'sophia@demo.com', password: btoa('123456'), name: 'Sophia', bio: 'Artist & reader', age: 26, gender: 'female', preferences: 'male', interests: ['Art','Reading','Music'], location: 'Chicago', photos: ['https://randomuser.me/api/portraits/women/3.jpg'], isVerified: false, isPremium: false, isAdmin: false, isBanned: false, isBoosted: false, likesReceived: [], swipesGiven: [], matches: [], blockedUsers: [], privacySettings: {}, onlineStatus: false, lastActive: Date.now() - 3600000 }
-        ];
-        localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(defaultUsers));
-        localStorage.setItem(STORAGE_KEYS.swipes, JSON.stringify([]));
-        localStorage.setItem(STORAGE_KEYS.matches, JSON.stringify([]));
-        localStorage.setItem(STORAGE_KEYS.messages, JSON.stringify([]));
-        localStorage.setItem(STORAGE_KEYS.reports, JSON.stringify([]));
+      if(!localStorage.getItem(STORAGE.users)){
+        const miranda = {
+          id:'demo_human', email:'miranda@connectly.com', password:btoa('demo123'), name:'Miranda West', 
+          bio:'Work hard in silence. Let your success be the noise.', age:28, gender:'female', preferences:'male', 
+          interests:['Fitness','Travel','Entrepreneurship'], location:'New York', 
+          photos:['https://randomuser.me/api/portraits/women/68.jpg'], isVerified:true, isPremium:true, 
+          isAdmin:false, isBanned:false, blockedUsers:[], privacySettings:{}, onlineStatus:true, lastActive:Date.now(),
+          address:'123 Park Avenue, NY', notificationsEnabled:true, devices:[{name:'iPhone 15', lastActive:'Today'}], language:'English'
+        };
+        const adminUser = {
+          id:'admin1', email:'admin@connectly.com', password:btoa('admin123'), name:'Admin', bio:'Platform admin', age:30, 
+          gender:'male', preferences:'female', interests:['Admin'], location:'Global', 
+          photos:['https://randomuser.me/api/portraits/men/1.jpg'], isVerified:true, isPremium:true, isAdmin:true, 
+          isBanned:false, blockedUsers:[], privacySettings:{}, onlineStatus:true, lastActive:Date.now(),
+          address:'', notificationsEnabled:true, devices:[], language:'English'
+        };
+        users = [AI_BOT, miranda, adminUser];
+        matches = [{ id:'match_ai_demo', users:['demo_human','ai_connectly_bot'], createdAt:Date.now(), lastMessage:'Hello! I am Connectly AI' }];
+        messages = [{ id:Date.now(), matchId:'match_ai_demo', fromUserId:'ai_connectly_bot', toUserId:'demo_human', text:'Hello! I am Connectly AI, ready to chat!', timestamp:Date.now()-3600000 }];
+        localStorage.setItem(STORAGE.users, JSON.stringify(users));
+        localStorage.setItem(STORAGE.swipes, JSON.stringify([]));
+        localStorage.setItem(STORAGE.matches, JSON.stringify(matches));
+        localStorage.setItem(STORAGE.messages, JSON.stringify(messages));
+        localStorage.setItem(STORAGE.reports, JSON.stringify([]));
+      } else {
+        let storedUsers = JSON.parse(localStorage.getItem(STORAGE.users));
+        if(!storedUsers.find(u=>u.id === 'ai_connectly_bot')) storedUsers.push(AI_BOT);
+        // ensure all users have new fields (migration)
+        storedUsers = storedUsers.map(u => ({
+          ...u,
+          address: u.address || '',
+          notificationsEnabled: u.notificationsEnabled !== undefined ? u.notificationsEnabled : true,
+          devices: u.devices || [],
+          language: u.language || 'English'
+        }));
+        localStorage.setItem(STORAGE.users, JSON.stringify(storedUsers));
       }
     }
 
-    function loadData(){
-      users = JSON.parse(localStorage.getItem(STORAGE_KEYS.users));
-      swipes = JSON.parse(localStorage.getItem(STORAGE_KEYS.swipes));
-      matches = JSON.parse(localStorage.getItem(STORAGE_KEYS.matches));
-      messages = JSON.parse(localStorage.getItem(STORAGE_KEYS.messages));
-      reports = JSON.parse(localStorage.getItem(STORAGE_KEYS.reports));
+    function loadData() { 
+      users = JSON.parse(localStorage.getItem(STORAGE.users)); 
+      swipes = JSON.parse(localStorage.getItem(STORAGE.swipes)); 
+      matches = JSON.parse(localStorage.getItem(STORAGE.matches)); 
+      messages = JSON.parse(localStorage.getItem(STORAGE.messages)); 
+      reports = JSON.parse(localStorage.getItem(STORAGE.reports)); 
     }
-    function saveData(){
-      localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
-      localStorage.setItem(STORAGE_KEYS.swipes, JSON.stringify(swipes));
-      localStorage.setItem(STORAGE_KEYS.matches, JSON.stringify(matches));
-      localStorage.setItem(STORAGE_KEYS.messages, JSON.stringify(messages));
-      localStorage.setItem(STORAGE_KEYS.reports, JSON.stringify(reports));
+    function saveData() { 
+      localStorage.setItem(STORAGE.users, JSON.stringify(users)); 
+      localStorage.setItem(STORAGE.swipes, JSON.stringify(swipes)); 
+      localStorage.setItem(STORAGE.matches, JSON.stringify(matches)); 
+      localStorage.setItem(STORAGE.messages, JSON.stringify(messages)); 
+      localStorage.setItem(STORAGE.reports, JSON.stringify(reports)); 
     }
-
-    // Helper: find user
-    function findUserById(uid){ return users.find(u=>u.id===uid); }
-
-    // Matching algorithm (compatibility)
-    function getCompatibility(userA, userB){
-      if(userA.id === userB.id) return 0;
-      if(userA.blockedUsers.includes(userB.id)) return -1;
-      if(userB.blockedUsers.includes(userA.id)) return -1;
-      let common = userA.interests.filter(i=>userB.interests.includes(i)).length;
-      let ageDiff = Math.abs(userA.age - userB.age);
-      let score = common * 20 - ageDiff * 2 + (userA.preferences === userB.gender ? 30 : 0);
-      return Math.max(0, Math.min(100, score));
+    function findUserById(id) { return users.find(u=>u.id===id); }
+    
+    function ensureMatchWithAIBot(userId) { 
+      if(!matches.find(m=>m.users.includes(userId) && m.users.includes('ai_connectly_bot'))){ 
+        const newMatchId = `match_ai_${userId}_${Date.now()}`; 
+        matches.push({ id:newMatchId, users:[userId,'ai_connectly_bot'], createdAt:Date.now(), lastMessage:'✨ You matched with Connectly AI!' }); 
+        messages.push({ id:Date.now(), matchId:newMatchId, fromUserId:'ai_connectly_bot', toUserId:userId, text:'Hi there! I’m Connectly AI 💬', timestamp:Date.now() }); 
+        saveData(); 
+      } 
     }
 
-    // Get discover candidates (excluding already swiped, matched, blocked)
-    function getDiscoverUsers(){
-      let swipedUserIds = swipes.filter(s=>s.fromUserId===currentUser.id).map(s=>s.toUserId);
-      let matchedIds = matches.filter(m=>m.users.includes(currentUser.id)).flatMap(m=>m.users).filter(id=>id!==currentUser.id);
-      let blockedIds = currentUser.blockedUsers;
-      let candidates = users.filter(u=> u.id !== currentUser.id && !swipedUserIds.includes(u.id) && !matchedIds.includes(u.id) && !blockedIds.includes(u.id) && !u.isBanned && (currentUser.privacySettings?.hideProfile ? false : true) && (u.privacySettings?.visibility !== 'private' || u.id === currentUser.id));
-      // boost premium: higher order
-      candidates.sort((a,b)=> (b.isBoosted?100:0) + getCompatibility(currentUser,b) - ((a.isBoosted?100:0)+getCompatibility(currentUser,a)));
-      return candidates;
+    function generateAIResponse(msg) { 
+      const lower=msg.toLowerCase(); 
+      if(lower.includes('hi')||lower.includes('hello')) return "Hey! 👋 How's it going?"; 
+      if(lower.includes('match')) return "Swiping right is key! Make your bio shine ✨"; 
+      return "That's interesting! Tell me more 😊"; 
+    }
+    
+    function sendMessage(matchId, text) { 
+      const match=matches.find(m=>m.id===matchId); 
+      if(!match) return; 
+      const receiverId=match.users.find(id=>id!==currentUser.id); 
+      messages.push({ id:Date.now(), matchId, fromUserId:currentUser.id, toUserId:receiverId, text, timestamp:Date.now() }); 
+      match.lastMessage=text; 
+      saveData(); 
+      renderMessagesPage(matchId); 
+      if(receiverId==='ai_connectly_bot') setTimeout(()=>{ 
+        const reply=generateAIResponse(text); 
+        messages.push({ id:Date.now(), matchId, fromUserId:'ai_connectly_bot', toUserId:currentUser.id, text:reply, timestamp:Date.now() }); 
+        const m=matches.find(m=>m.id===matchId); if(m) m.lastMessage=reply; saveData(); renderMessagesPage(matchId); 
+      },800); 
     }
 
-    // Swipe action
-    function handleSwipe(toUserId, direction){
-      const swipedUser = findUserById(toUserId);
-      if(!swipedUser) return false;
-      const existingSwipe = swipes.find(s=> s.fromUserId===currentUser.id && s.toUserId===toUserId);
-      if(existingSwipe) return false;
-      // premium unlimited check
-      const todaySwipes = swipes.filter(s=> s.fromUserId===currentUser.id && new Date(s.timestamp).toDateString() === new Date().toDateString()).length;
-      if(!currentUser.isPremium && todaySwipes >= 10){ alert("Free limit: 10 swipes/day. Upgrade to Premium!"); return false; }
-      swipes.push({ fromUserId: currentUser.id, toUserId, direction, timestamp: Date.now() });
-      if(direction === 'like'){
-        // check mutual like
-        const mutual = swipes.find(s=> s.fromUserId===toUserId && s.toUserId===currentUser.id && s.direction==='like');
-        if(mutual){
-          const matchId = `m_${Date.now()}`;
-          matches.push({ id: matchId, users: [currentUser.id, toUserId], createdAt: Date.now(), lastMessage: '' });
-          saveData();
-          alert(`It's a match! You can now chat with ${swipedUser.name}`);
-          renderCurrentPage();
-          return true;
-        }
-      }
-      saveData();
-      renderCurrentPage();
-      return true;
+    function showContactProfileModal(contactUser) { 
+      const modalDiv=document.createElement('div'); modalDiv.className='modal-overlay'; 
+      modalDiv.innerHTML=`<div class="modal-card p-6 text-center"><button class="absolute top-2 right-3 text-2xl" id="closeModalBtn">&times;</button><img src="${contactUser.photos[0]}" class="w-24 h-24 rounded-full mx-auto border-4 border-pink-400"><div class="mt-2 flex justify-center gap-1"><span class="text-2xl font-bold">${contactUser.name}</span>${contactUser.isVerified?'<i class="fas fa-check-circle text-pink-500 text-xl"></i>':''}</div><p>${contactUser.age} · ${contactUser.location}</p><div class="bg-gray-100 dark:bg-gray-800 p-3 rounded-xl text-left mt-3"><p><i class="fas fa-info-circle"></i> ${contactUser.bio}</p><div class="flex flex-wrap gap-1 mt-2">${contactUser.interests.map(i=>`<span class="bg-pink-100 dark:bg-pink-900 text-pink-700 text-xs px-2 py-1 rounded-full">${i}</span>`).join('')}</div></div><div class="flex justify-center gap-6 mt-4"><button id="videoCallBtn" class="bg-green-500 p-3 rounded-full"><i class="fas fa-video text-white"></i></button><button id="voiceCallBtn" class="bg-blue-500 p-3 rounded-full"><i class="fas fa-phone-alt text-white"></i></button></div></div>`; 
+      document.body.appendChild(modalDiv); 
+      document.getElementById('closeModalBtn').onclick=()=>modalDiv.remove(); 
+      document.getElementById('videoCallBtn')?.onclick=()=>{ alert("Video call demo"); modalDiv.remove(); }; 
+      document.getElementById('voiceCallBtn')?.onclick=()=>{ alert("Voice call demo"); modalDiv.remove(); }; 
+      modalDiv.onclick=(e)=>{ if(e.target===modalDiv) modalDiv.remove(); }; 
     }
 
-    // Messaging
-    function sendMessage(matchId, text, imageUrl=null){
-      const match = matches.find(m=>m.id === matchId);
-      if(!match) return;
-      const receiverId = match.users.find(id=>id !== currentUser.id);
-      const newMsg = { id: Date.now(), matchId, fromUserId: currentUser.id, toUserId: receiverId, text, image: imageUrl, timestamp: Date.now(), read: false };
-      messages.push(newMsg);
-      match.lastMessage = text;
-      saveData();
-      renderMessagesPage(matchId);
-    }
-    function getMatchChat(matchId){
-      return messages.filter(m=>m.matchId === matchId).sort((a,b)=>a.timestamp-b.timestamp);
-    }
-
-    // Admin functions
-    function banUser(adminUser, userId){
-      if(!adminUser.isAdmin) return;
-      const user = findUserById(userId);
-      if(user){ user.isBanned = true; saveData(); renderAdminDashboard(); }
-    }
-    function verifyUser(adminUser, userId){
-      if(!adminUser.isAdmin) return;
-      const user = findUserById(userId);
-      if(user){ user.isVerified = true; saveData(); renderAdminDashboard(); }
-    }
-    // Report user
-    function reportUser(reporterId, reportedId, reason){
-      reports.push({ id: Date.now(), reporterId, reportedId, reason, timestamp: Date.now(), resolved: false });
-      saveData();
-      alert("Report submitted. Admin will review.");
-    }
-
-    // UI Rendering Dispatch
-    function renderCurrentPage(){
-      const active = document.querySelector('.active-page')?.id;
-      if(active === 'discoverPage') renderDiscover();
-      else if(active === 'matchesPage') renderMatches();
-      else if(active === 'messagesPage') renderMessagesPage();
-      else if(active === 'profilePage') renderProfile();
-      else if(active === 'premiumPage') renderPremium();
-      else if(active === 'adminPage') renderAdminDashboard();
-    }
-
-    function renderDiscover(){
-      const container = document.getElementById('discoverPage');
-      let candidates = getDiscoverUsers();
-      if(candidates.length===0){ container.innerHTML=`<div class="text-center p-10">✨ No more profiles nearby. Check later!</div>`; return; }
-      let idx=0;
-      const renderCard = (user) => {
-        if(!user) return;
-        container.innerHTML = `
-          <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden transition-all-smooth card-swipe" id="swipeCard">
-            <img src="${user.photos[0] || 'https://via.placeholder.com/400'}" class="w-full h-80 object-cover">
-            <div class="p-4">
-              <div class="flex items-center gap-2"><h3 class="text-2xl font-bold">${user.name}, ${user.age}</h3> ${user.isVerified ? '<i class="fas fa-check-circle text-blue-500"></i>' : ''}</div>
-              <p class="text-gray-600 dark:text-gray-300 mt-1"><i class="fas fa-map-marker-alt"></i> ${user.location}</p>
-              <p class="mt-2">${user.bio}</p>
-              <div class="flex flex-wrap gap-1 mt-2">${user.interests.map(i=>`<span class="bg-pink-100 dark:bg-pink-900 text-pink-700 text-xs px-2 py-1 rounded-full">${i}</span>`).join('')}</div>
-            </div>
-            <div class="flex justify-around p-4 border-t dark:border-gray-700">
-              <button id="swipeLeftBtn" class="bg-red-500 text-white p-4 rounded-full shadow-lg"><i class="fas fa-times text-2xl"></i></button>
-              <button id="swipeRightBtn" class="bg-green-500 text-white p-4 rounded-full shadow-lg"><i class="fas fa-heart text-2xl"></i></button>
-            </div>
-          </div>
-        `;
-        const card = document.getElementById('swipeCard');
-        let startX = 0, currentX = 0;
-        card.addEventListener('touchstart', (e)=>{ startX = e.touches[0].clientX; });
-        card.addEventListener('touchmove', (e)=>{ currentX = e.touches[0].clientX; let diff = currentX - startX; card.style.transform = `translateX(${diff}px) rotate(${diff*0.05}deg)`; });
-        card.addEventListener('touchend', (e)=>{
-          let diff = currentX - startX;
-          if(diff > 80) { finishSwipe('right', user); }
-          else if(diff < -80) { finishSwipe('left', user); }
-          else { card.style.transform = ''; }
-          startX=0; currentX=0;
-        });
-        document.getElementById('swipeLeftBtn')?.addEventListener('click',()=>finishSwipe('left',user));
-        document.getElementById('swipeRightBtn')?.addEventListener('click',()=>finishSwipe('right',user));
-      };
-      const finishSwipe = (dir, user) => {
-        handleSwipe(user.id, dir === 'right' ? 'like' : 'dislike');
-      };
-      if(candidates[0]) renderCard(candidates[0]);
-    }
-
-    function renderMatches(){
-      const myMatches = matches.filter(m=>m.users.includes(currentUser.id));
-      const container = document.getElementById('matchesPage');
-      if(myMatches.length===0){ container.innerHTML=`<div class="text-center p-8">No matches yet. Keep swiping!</div>`; return; }
-      container.innerHTML = `<div class="grid gap-4">${myMatches.map(match=>{
-        const otherId = match.users.find(id=>id!==currentUser.id);
-        const other = findUserById(otherId);
-        return `<div class="bg-white dark:bg-gray-800 rounded-xl p-3 flex items-center gap-3 shadow cursor-pointer" data-matchid="${match.id}">
-          <img src="${other.photos[0]}" class="w-16 h-16 rounded-full object-cover">
-          <div><h3 class="font-bold">${other.name}, ${other.age}</h3><p class="text-sm text-gray-500">${match.lastMessage || 'Say hi!'}</p></div>
-        </div>`;
-      }).join('')}</div>`;
-      document.querySelectorAll('[data-matchid]').forEach(el=>{
-        el.addEventListener('click',()=>{ showMessagesForMatch(el.dataset.matchid); });
-      });
-    }
-    function showMessagesForMatch(matchId){
-      document.getElementById('messagesPage').classList.remove('hidden');
-      document.getElementById('matchesPage').classList.add('hidden');
-      document.getElementById('discoverPage')?.classList.add('hidden');
-      document.getElementById('profilePage')?.classList.add('hidden');
-      document.getElementById('premiumPage')?.classList.add('hidden');
-      document.getElementById('adminPage')?.classList.add('hidden');
-      document.getElementById('messagesPage').classList.add('active-page');
-      renderMessagesPage(matchId);
-    }
-    function renderMessagesPage(matchId=null){
-      const container = document.getElementById('messagesPage');
-      const userMatches = matches.filter(m=>m.users.includes(currentUser.id));
-      if(!matchId && userMatches.length) matchId = userMatches[0]?.id;
-      const selectedMatch = matches.find(m=>m.id===matchId);
-      const otherUser = selectedMatch ? findUserById(selectedMatch.users.find(id=>id!==currentUser.id)) : null;
-      let chatHtml = `<div class="flex flex-col h-[70vh]"><div class="mb-2 flex items-center gap-2 border-b pb-2"><i class="fas fa-arrow-left cursor-pointer" id="backMatches"></i><img src="${otherUser?.photos[0]}" class="w-10 h-10 rounded-full"><span class="font-bold">${otherUser?.name}</span></div><div class="flex-1 overflow-y-auto p-2 space-y-2" id="chatMsgs"></div><div class="flex gap-2 mt-2"><input id="msgInput" placeholder="Message..." class="flex-1 border rounded-full px-4 py-2 dark:bg-gray-800"><button id="sendMsgBtn" class="bg-pink-500 px-4 rounded-full"><i class="fas fa-paper-plane"></i></button></div></div>`;
-      container.innerHTML = chatHtml;
-      document.getElementById('backMatches')?.addEventListener('click',()=>{ navigateTo('matches'); renderMatches(); });
-      const refreshMessages = ()=>{
-        if(!selectedMatch) return;
-        const msgs = getMatchChat(selectedMatch.id);
-        const msgDiv = document.getElementById('chatMsgs');
-        if(msgDiv) msgDiv.innerHTML = msgs.map(m=>`<div class="flex ${m.fromUserId===currentUser.id ? 'justify-end' : 'justify-start'}"><div class="message-bubble p-2 rounded-2xl ${m.fromUserId===currentUser.id ? 'bg-pink-500 text-white' : 'bg-gray-200 dark:bg-gray-700'}">${m.text || (m.image?`<img src="${m.image}" class="max-w-32 rounded">`:'')}<div class="text-xs opacity-70">${new Date(m.timestamp).toLocaleTimeString()}</div></div></div>`).join('');
-        msgDiv?.scrollTo(0, msgDiv.scrollHeight);
-      };
-      refreshMessages();
-      document.getElementById('sendMsgBtn')?.addEventListener('click',()=>{
-        const inp = document.getElementById('msgInput');
-        if(inp.value.trim() && selectedMatch) sendMessage(selectedMatch.id, inp.value);
-        inp.value='';
-        refreshMessages();
-      });
-      const interval = setInterval(()=>{ if(document.getElementById('messagesPage').classList.contains('hidden')) clearInterval(interval); else refreshMessages(); }, 1500);
-    }
-    function renderProfile(){
+    // ---------- FULL PROFILE WITH WORKING SETTINGS ----------
+    function renderProfile() {
       const container = document.getElementById('profilePage');
-      container.innerHTML = `<div class="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow">
-        <div class="flex flex-col items-center"><img src="${currentUser.photos[0] || 'https://via.placeholder.com/100'}" class="w-28 h-28 rounded-full object-cover border-4 border-pink-300"><button id="editPhotoBtn" class="text-sm mt-1 text-pink-500">Change Photo</button><h2 class="text-2xl font-bold mt-2">${currentUser.name}, ${currentUser.age}</h2>${currentUser.isVerified ? '<span class="text-blue-500"><i class="fas fa-check-circle"></i> Verified</span>' : ''}<p class="text-gray-500">${currentUser.bio}</p></div>
-        <div class="mt-4"><label>Bio</label><input id="editBio" class="w-full border rounded p-2" value="${currentUser.bio}"></div>
-        <div class="mt-2"><label>Interests (comma)</label><input id="editInterests" value="${currentUser.interests.join(',')}" class="w-full border rounded p-2"></div>
-        <button id="saveProfileBtn" class="mt-4 w-full bg-pink-500 py-2 rounded text-white">Save Changes</button>
-        <hr class="my-4"><div class="text-sm"><button id="reportSupportBtn" class="text-red-500"><i class="fas fa-flag"></i> Report a user</button> | <button id="privacySettingsBtn" class="text-gray-500">Privacy Settings</button></div>
-      </div>`;
-      document.getElementById('saveProfileBtn')?.addEventListener('click',()=>{
-        currentUser.bio = document.getElementById('editBio').value;
-        currentUser.interests = document.getElementById('editInterests').value.split(',').map(s=>s.trim());
-        saveData(); alert("Profile updated!");
+      container.innerHTML = `
+        <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm overflow-hidden">
+          <div class="flex flex-col items-center pt-8 pb-4 px-4 border-b border-gray-100 dark:border-gray-700">
+            <div class="relative"><img src="${currentUser.photos[0]}" class="w-24 h-24 rounded-full object-cover border-4 border-pink-200"><button id="changeAvatarBtn" class="absolute bottom-0 right-0 bg-pink-500 text-white rounded-full p-1.5 text-xs"><i class="fas fa-camera"></i></button></div>
+            <div class="mt-3 flex items-center gap-1"><h2 class="text-2xl font-bold">${currentUser.name}</h2>${currentUser.isVerified ? '<i class="fas fa-check-circle text-pink-500 text-xl ml-1"></i>' : '<button id="requestVerifyBtn" class="text-xs bg-pink-100 dark:bg-pink-900/40 text-pink-600 px-2 py-0.5 rounded-full ml-2">Verify</button>'}</div>
+            <p class="text-gray-500 dark:text-gray-400 text-sm italic text-center">“${currentUser.bio}”</p>
+            <button id="editBioBtn" class="mt-2 text-xs text-pink-500"><i class="fas fa-pen"></i> Edit bio</button>
+          </div>
+          <div class="divide-y divide-gray-100 dark:divide-gray-700">
+            <div class="profile-setting-item flex items-center justify-between p-4" data-setting="address"><div class="flex items-center gap-3"><i class="fas fa-map-pin w-5 text-pink-500"></i><span>My Address</span></div><i class="fas fa-chevron-right text-gray-400"></i></div>
+            <div class="profile-setting-item flex items-center justify-between p-4" data-setting="account"><div class="flex items-center gap-3"><i class="fas fa-user-circle w-5 text-pink-500"></i><span>Account</span></div><i class="fas fa-chevron-right text-gray-400"></i></div>
+            <div class="profile-setting-item flex items-center justify-between p-4" data-setting="notifications"><div class="flex items-center gap-3"><i class="fas fa-bell w-5 text-pink-500"></i><span>Notifications</span></div><i class="fas fa-chevron-right text-gray-400"></i></div>
+            <div class="profile-setting-item flex items-center justify-between p-4" data-setting="devices"><div class="flex items-center gap-3"><i class="fas fa-mobile-alt w-5 text-pink-500"></i><span>Devices</span></div><i class="fas fa-chevron-right text-gray-400"></i></div>
+            <div class="profile-setting-item flex items-center justify-between p-4" data-setting="passwords"><div class="flex items-center gap-3"><i class="fas fa-key w-5 text-pink-500"></i><span>Passwords</span></div><i class="fas fa-chevron-right text-gray-400"></i></div>
+            <div class="profile-setting-item flex items-center justify-between p-4" data-setting="language"><div class="flex items-center gap-3"><i class="fas fa-language w-5 text-pink-500"></i><span>Language</span></div><i class="fas fa-chevron-right text-gray-400"></i></div>
+          </div>
+          <div class="flex justify-around p-3 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+            <button class="profile-tab-btn text-pink-500 font-semibold" data-tab="shop"><i class="fas fa-store"></i> Shop</button>
+            <button class="profile-tab-btn text-gray-500" data-tab="explore"><i class="fas fa-compass"></i> Explore</button>
+            <button class="profile-tab-btn text-gray-500" data-tab="brands"><i class="fas fa-tag"></i> Brands</button>
+            <button class="profile-tab-btn text-gray-500" data-tab="profile"><i class="fas fa-user"></i> Profile</button>
+          </div>
+          <div id="profileTabContent" class="p-4 text-center text-sm text-gray-500">✨ Select a tab above</div>
+        </div>
+      `;
+
+      function showFormModal(title, fieldsHtml, onSave) {
+        const modal = document.createElement('div'); modal.className = 'modal-overlay';
+        modal.innerHTML = `<div class="modal-card p-5 w-80"><h3 class="font-bold text-lg mb-3">${title}</h3>${fieldsHtml}<div class="flex justify-end gap-2 mt-4"><button id="modalCancel" class="px-3 py-1 bg-gray-300 rounded">Cancel</button><button id="modalSave" class="px-3 py-1 bg-pink-500 text-white rounded">Save</button></div></div>`;
+        document.body.appendChild(modal);
+        modal.querySelector('#modalCancel').onclick = () => modal.remove();
+        modal.querySelector('#modalSave').onclick = () => { onSave(modal); modal.remove(); renderProfile(); };
+        modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
+      }
+
+      document.querySelector('[data-setting="address"]').onclick = () => {
+        showFormModal('Edit Address', `<input id="addrInput" class="w-full p-2 border rounded" value="${currentUser.address || ''}" placeholder="Street, City, Zip">`, (modal) => {
+          currentUser.address = modal.querySelector('#addrInput').value;
+          saveData();
+        });
+      };
+      document.querySelector('[data-setting="account"]').onclick = () => {
+        showFormModal('Account Settings', `
+          <label>Name</label><input id="accName" class="w-full p-2 border rounded mb-2" value="${currentUser.name}">
+          <label>Email</label><input id="accEmail" class="w-full p-2 border rounded mb-2" value="${currentUser.email}">
+          <label>Age</label><input id="accAge" type="number" class="w-full p-2 border rounded mb-2" value="${currentUser.age}">
+          <label>Gender</label><select id="accGender" class="w-full p-2 border rounded mb-2"><option ${currentUser.gender==='female'?'selected':''}>female</option><option ${currentUser.gender==='male'?'selected':''}>male</option><option ${currentUser.gender==='non-binary'?'selected':''}>non-binary</option></select>
+          <label>Location</label><input id="accLocation" class="w-full p-2 border rounded" value="${currentUser.location}">
+        `, (modal) => {
+          currentUser.name = modal.querySelector('#accName').value;
+          currentUser.email = modal.querySelector('#accEmail').value;
+          currentUser.age = parseInt(modal.querySelector('#accAge').value);
+          currentUser.gender = modal.querySelector('#accGender').value;
+          currentUser.location = modal.querySelector('#accLocation').value;
+          saveData();
+        });
+      };
+      document.querySelector('[data-setting="notifications"]').onclick = () => {
+        const enabled = currentUser.notificationsEnabled !== false;
+        showFormModal('Notifications', `<label class="flex items-center gap-2"><input type="checkbox" id="notifToggle" ${enabled ? 'checked' : ''}> Enable push notifications</label><p class="text-xs text-gray-500 mt-2">Get alerts for new matches and messages</p>`, (modal) => {
+          currentUser.notificationsEnabled = modal.querySelector('#notifToggle').checked;
+          saveData();
+          alert(`Notifications ${currentUser.notificationsEnabled ? 'ON' : 'OFF'}`);
+        });
+      };
+      document.querySelector('[data-setting="devices"]').onclick = () => {
+        const devices = currentUser.devices || [];
+        const listHtml = devices.map((d,i) => `<div class="flex justify-between items-center border-b py-2"><span><i class="fas fa-mobile-alt"></i> ${d.name}<br><span class="text-xs">${d.lastActive}</span></span><button class="removeDeviceBtn text-red-500" data-index="${i}">Remove</button></div>`).join('');
+        const modal = document.createElement('div'); modal.className='modal-overlay';
+        modal.innerHTML = `<div class="modal-card p-5 w-80"><h3 class="font-bold">Devices</h3><div id="devicesList">${listHtml || '<p class="text-gray-500 text-sm">No saved devices</p>'}</div><button id="addDeviceBtn" class="mt-3 text-pink-500 text-sm"><i class="fas fa-plus"></i> Add current device</button><div class="flex justify-end mt-4"><button id="closeDevicesBtn" class="px-3 py-1 bg-gray-300 rounded">Close</button></div></div>`;
+        document.body.appendChild(modal);
+        modal.querySelector('#closeDevicesBtn').onclick = () => modal.remove();
+        modal.querySelector('#addDeviceBtn')?.addEventListener('click', () => {
+          const newDevice = { name: `Web Browser ${new Date().toLocaleTimeString()}`, lastActive: 'Just now' };
+          if(!currentUser.devices) currentUser.devices = [];
+          currentUser.devices.unshift(newDevice);
+          saveData();
+          modal.remove();
+          document.querySelector('[data-setting="devices"]').click();
+        });
+        modal.querySelectorAll('.removeDeviceBtn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const idx = parseInt(btn.dataset.index);
+            currentUser.devices.splice(idx,1);
+            saveData();
+            modal.remove();
+            document.querySelector('[data-setting="devices"]').click();
+          });
+        });
+        modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
+      };
+      document.querySelector('[data-setting="passwords"]').onclick = () => {
+        showFormModal('Change Password', `<input type="password" id="oldPwd" placeholder="Current password" class="w-full p-2 border rounded mb-2"><input type="password" id="newPwd" placeholder="New password" class="w-full p-2 border rounded mb-2"><input type="password" id="confirmPwd" placeholder="Confirm" class="w-full p-2 border rounded">`, (modal) => {
+          const old = modal.querySelector('#oldPwd').value;
+          const newPwd = modal.querySelector('#newPwd').value;
+          const confirm = modal.querySelector('#confirmPwd').value;
+          if(atob(currentUser.password) !== old) { alert("Current password incorrect"); return; }
+          if(newPwd !== confirm) { alert("Passwords don't match"); return; }
+          currentUser.password = btoa(newPwd);
+          saveData();
+          alert("Password updated successfully!");
+        });
+      };
+      document.querySelector('[data-setting="language"]').onclick = () => {
+        const langs = ['English', 'Spanish', 'French', 'German', 'Italian', 'Portuguese'];
+        const options = langs.map(l => `<option ${currentUser.language===l ? 'selected' : ''}>${l}</option>`).join('');
+        showFormModal('Select Language', `<select id="langSelect" class="w-full p-2 border rounded">${options}</select>`, (modal) => {
+          currentUser.language = modal.querySelector('#langSelect').value;
+          saveData();
+          alert(`Language set to ${currentUser.language}`);
+        });
+      };
+
+      const shopContent = `<div class="space-y-2"><div class="bg-pink-100 dark:bg-pink-900/30 p-3 rounded-xl"><i class="fas fa-tshirt"></i> Premium Merch - "Connectly Hoodie" $39.99</div><div class="bg-pink-100 dark:bg-pink-900/30 p-3 rounded-xl"><i class="fas fa-gem"></i> Boost profile - $4.99</div><button class="bg-pink-500 text-white px-4 py-2 rounded-full w-full mt-2">Shop Now</button></div>`;
+      const exploreContent = `<div class="grid grid-cols-2 gap-3"><div class="bg-gray-100 dark:bg-gray-700 p-3 rounded-xl text-center"><i class="fas fa-globe text-2xl"></i><p>Global Passport</p></div><div class="bg-gray-100 dark:bg-gray-700 p-3 rounded-xl text-center"><i class="fas fa-chart-line text-2xl"></i><p>Popular near you</p></div></div>`;
+      const brandsContent = `<div class="space-y-2"><div class="flex items-center gap-3"><img src="https://via.placeholder.com/40" class="rounded-full"><span>Nike x Connectly</span></div><div class="flex items-center gap-3"><img src="https://via.placeholder.com/40" class="rounded-full"><span>Spotify Dating Playlist</span></div></div>`;
+      const profileTabContent = `<div class="text-left"><p><i class="fas fa-calendar"></i> Member since: ${new Date(currentUser.lastActive).toLocaleDateString()}</p><p><i class="fas fa-heart"></i> Matches: ${matches.filter(m=>m.users.includes(currentUser.id)).length}</p><button id="deleteAccountBtn" class="mt-4 bg-red-500 text-white px-4 py-2 rounded-full w-full">Delete Account</button></div>`;
+
+      const tabBtns = document.querySelectorAll('.profile-tab-btn');
+      const contentDiv = document.getElementById('profileTabContent');
+      tabBtns.forEach(btn => {
+        btn.onclick = () => {
+          tabBtns.forEach(b => b.classList.remove('text-pink-500', 'font-semibold'));
+          btn.classList.add('text-pink-500', 'font-semibold');
+          const tab = btn.dataset.tab;
+          if(tab === 'shop') contentDiv.innerHTML = shopContent;
+          else if(tab === 'explore') contentDiv.innerHTML = exploreContent;
+          else if(tab === 'brands') contentDiv.innerHTML = brandsContent;
+          else if(tab === 'profile') contentDiv.innerHTML = profileTabContent;
+          if(tab === 'profile') document.getElementById('deleteAccountBtn')?.addEventListener('click', () => { if(confirm("Permanently delete your account?")) { users = users.filter(u=>u.id !== currentUser.id); saveData(); alert("Account deleted."); logout(); } });
+        };
       });
-      document.getElementById('editPhotoBtn')?.addEventListener('click',()=>{ let url=prompt("Enter image URL"); if(url) currentUser.photos=[url]; saveData(); renderProfile(); });
-      document.getElementById('privacySettingsBtn')?.addEventListener('click',()=>{ let hide = confirm("Hide profile from discovery?"); currentUser.privacySettings = { hideProfile: hide, visibility: hide?'private':'public' }; saveData(); alert("Updated"); });
-    }
-    function renderPremium(){
-      const container = document.getElementById('premiumPage');
-      const seeLikes = () => { let likedBy = swipes.filter(s=>s.toUserId===currentUser.id && s.direction==='like').map(s=>findUserById(s.fromUserId)).filter(u=>u); alert(likedBy.map(u=>u.name).join(', ') || "No one liked you yet"); };
-      container.innerHTML = `<div class="bg-gradient-to-r from-pink-500 to-orange-400 p-6 rounded-2xl text-white text-center"><i class="fas fa-crown text-4xl"></i><h2 class="text-2xl font-bold">Premium Access</h2><p>Unlock all features</p></div>
-      <div class="mt-4 space-y-3"><div class="flex justify-between p-3 bg-white dark:bg-gray-800 rounded-xl"><span>Verified Badge</span><button id="buyVerification" class="bg-pink-500 px-3 rounded">${currentUser.isVerified ? '✅ Active' : 'Get ($9.99)'}</button></div>
-      <div class="flex justify-between p-3 bg-white dark:bg-gray-800 rounded-xl"><span>Boost Profile</span><button id="boostBtn" class="bg-pink-500 px-3 rounded">${currentUser.isBoosted ? 'Active' : 'Boost ($4.99)'}</button></div>
-      <div class="flex justify-between p-3 bg-white dark:bg-gray-800 rounded-xl"><span>See who liked you</span><button id="seeLikesBtn" class="bg-pink-500 px-3 rounded">View</button></div>
-      <div class="flex justify-between p-3 bg-white dark:bg-gray-800 rounded-xl"><span>Unlimited Swipes</span><span>${currentUser.isPremium ? 'Active' : 'Upgrade'}</span></div>
-      <button id="buyPremiumBtn" class="w-full bg-yellow-500 py-3 rounded-xl font-bold mt-2">Upgrade to Premium ($19.99/mo)</button></div>`;
-      document.getElementById('buyVerification')?.addEventListener('click',()=>{ if(confirm("Purchase verification badge?")){ currentUser.isVerified=true; currentUser.isPremium=true; saveData(); renderPremium(); } });
-      document.getElementById('boostBtn')?.addEventListener('click',()=>{ if(confirm("Boost your profile?")){ currentUser.isBoosted=true; saveData(); renderPremium(); } });
-      document.getElementById('seeLikesBtn')?.addEventListener('click',seeLikes);
-      document.getElementById('buyPremiumBtn')?.addEventListener('click',()=>{ if(confirm("Subscribe Premium")){ currentUser.isPremium=true; saveData(); renderPremium(); } });
-    }
-    function renderAdminDashboard(){
-      if(!currentUser.isAdmin){ document.getElementById('adminNavBtn').classList.add('hidden'); return; }
-      document.getElementById('adminNavBtn').classList.remove('hidden');
-      const container = document.getElementById('adminPage');
-      const activeUsers = users.filter(u=>Date.now()-u.lastActive < 60000).length;
-      const totalMatches = matches.length;
-      const premiumRevenue = users.filter(u=>u.isPremium).length * 19.99;
-      container.innerHTML = `<div class="bg-white dark:bg-gray-800 p-4 rounded-xl mb-3"><h3 class="font-bold">Analytics</h3><p>Active: ${activeUsers} | Matches: ${totalMatches} | Revenue: $${premiumRevenue}</p></div>
-      <h3 class="font-bold">Manage Users</h3><div class="space-y-2 max-h-96 overflow-auto">${users.map(u=>`<div class="flex justify-between items-center bg-white dark:bg-gray-800 p-2 rounded"><span>${u.name} ${u.isBanned?'[BANNED]':''}</span><div><button class="banUserBtn text-red-500" data-id="${u.id}">Ban</button> <button class="verifyUserBtn text-green-500" data-id="${u.id}">Verify</button></div></div>`).join('')}</div>
-      <h3 class="font-bold mt-3">Reports</h3>${reports.filter(r=>!r.resolved).map(r=>`<div class="bg-white p-2 rounded"><b>${findUserById(r.reporterId)?.name}</b> reported ${findUserById(r.reportedId)?.name}: ${r.reason}<button data-report="${r.id}" class="resolveReportBtn text-sm bg-gray-300 px-2 rounded">Resolve</button></div>`).join('') || '<p>No reports</p>'}`;
-      document.querySelectorAll('.banUserBtn').forEach(btn=>btn.addEventListener('click',()=>banUser(currentUser, btn.dataset.id)));
-      document.querySelectorAll('.verifyUserBtn').forEach(btn=>btn.addEventListener('click',()=>verifyUser(currentUser, btn.dataset.id)));
-      document.querySelectorAll('.resolveReportBtn').forEach(btn=>btn.addEventListener('click',()=>{ let rep=reports.find(r=>r.id==btn.dataset.report); if(rep) rep.resolved=true; saveData(); renderAdminDashboard(); }));
+      document.getElementById('changeAvatarBtn')?.addEventListener('click', () => { let url = prompt("Avatar image URL:", currentUser.photos[0]); if(url) { currentUser.photos = [url]; saveData(); renderProfile(); } });
+      document.getElementById('editBioBtn')?.addEventListener('click', () => { let newBio = prompt("Edit your bio:", currentUser.bio); if(newBio) { currentUser.bio = newBio; saveData(); renderProfile(); } });
+      document.getElementById('requestVerifyBtn')?.addEventListener('click', () => { alert("Verification request sent."); });
     }
 
-    function navigateTo(pageId){
-      ['discoverPage','matchesPage','messagesPage','profilePage','premiumPage','adminPage'].forEach(id=>{
-        const el = document.getElementById(id);
-        if(id===pageId){ el.classList.remove('hidden'); el.classList.add('active-page'); } else { el.classList.add('hidden'); el.classList.remove('active-page'); }
-      });
-      renderCurrentPage();
+    // ----- MATCHES, MESSAGES, DISCOVER, VIP (shortened but functional) -----
+    function renderMatches() { 
+      const myMatches=matches.filter(m=>m.users.includes(currentUser.id)); 
+      const container=document.getElementById('matchesPage'); 
+      if(myMatches.length===0){ container.innerHTML=`<div class="text-center p-8">No matches yet. <button id="swipeNowBtn" class="bg-pink-500 px-4 py-2 rounded-full mt-2">Discover</button></div>`; document.getElementById('swipeNowBtn')?.addEventListener('click',()=>navigateTo('discover')); return; } 
+      container.innerHTML=`<div class="space-y-3">${myMatches.map(m=>{ const other=findUserById(m.users.find(id=>id!==currentUser.id)); return `<div class="bg-white dark:bg-gray-800 rounded-xl p-3 flex items-center gap-3 cursor-pointer" data-matchid="${m.id}"><img src="${other.photos[0]}" class="w-14 h-14 rounded-full"><div><span class="font-bold">${other.name}</span> ${other.isVerified?'<i class="fas fa-check-circle text-pink-500"></i>':''}<p class="text-sm text-gray-500">${m.lastMessage}</p></div></div>`; }).join('')}</div>`; 
+      document.querySelectorAll('[data-matchid]').forEach(el=>el.addEventListener('click',()=>{ navigateTo('messages'); renderMessagesPage(el.dataset.matchid); })); 
     }
-
-    // Auth & app start
-    function login(email, pwd){
+    let currentOpenMatchId=null;
+    function renderMessagesPage(matchId=null){ 
+      let available=matches.filter(m=>m.users.includes(currentUser.id)); 
+      if(!matchId && available.length) matchId=available[0]?.id; 
+      if(!matchId){ document.getElementById('messagesPage').innerHTML=`<div class="text-center p-8">No matches</div>`; return; } 
+      currentOpenMatchId=matchId; const match=matches.find(m=>m.id===matchId); const other=findUserById(match.users.find(id=>id!==currentUser.id)); 
+      const container=document.getElementById('messagesPage'); 
+      container.innerHTML=`<div class="flex flex-col h-[75vh]"><div class="flex items-center gap-3 p-3 bg-white dark:bg-gray-800"><button id="backMatches" class="text-xl"><i class="fas fa-arrow-left"></i></button><div id="contactTrigger" class="flex items-center gap-2 cursor-pointer"><img src="${other.photos[0]}" class="w-10 h-10 rounded-full"><div><span class="font-bold">${other.name}</span> ${other.isVerified?'<i class="fas fa-check-circle text-pink-500"></i>':''}<div class="text-xs text-green-500">Online</div></div></div><button id="infoBtn" class="ml-auto text-pink-500"><i class="fas fa-info-circle"></i></button></div><div id="chatMsgs" class="flex-1 overflow-y-auto p-3 space-y-2"></div><div class="p-3 flex gap-2"><input id="msgInput" class="flex-1 border rounded-full px-4 py-2 dark:bg-gray-700" placeholder="Message"><button id="sendMsg" class="bg-pink-500 p-2 rounded-full w-10 h-10"><i class="fas fa-paper-plane text-white"></i></button></div></div>`; 
+      const refresh=()=>{ const msgs=messages.filter(m=>m.matchId===matchId).sort((a,b)=>a.timestamp-b.timestamp); document.getElementById('chatMsgs').innerHTML=msgs.map(msg=>`<div class="flex ${msg.fromUserId===currentUser.id?'justify-end':'justify-start'}"><div class="message-bubble ${msg.fromUserId===currentUser.id?'message-bubble-user':'message-bubble-ai'} px-4 py-2 rounded-2xl max-w-[75%]">${msg.text}<div class="text-[10px] opacity-70">${new Date(msg.timestamp).toLocaleTimeString()}</div></div></div>`).join(''); document.getElementById('chatMsgs').scrollTop=document.getElementById('chatMsgs').scrollHeight; }; 
+      refresh(); document.getElementById('sendMsg').onclick=()=>{ const inp=document.getElementById('msgInput'); if(inp.value.trim()) sendMessage(matchId, inp.value); inp.value=''; }; document.getElementById('msgInput').addEventListener('keypress',e=>{if(e.key==='Enter') document.getElementById('sendMsg').click();}); document.getElementById('backMatches').onclick=()=>navigateTo('matches'); const trigger=document.getElementById('contactTrigger'); const infoBtn=document.getElementById('infoBtn'); const showModal=()=>showContactProfileModal(other); trigger.onclick=showModal; infoBtn.onclick=showModal; const interval=setInterval(()=>{ if(document.getElementById('messagesPage').classList.contains('hidden')) clearInterval(interval); else refresh(); },1500); 
+    }
+    function getDiscoverUsers(){ let swipedIds=swipes.filter(s=>s.fromUserId===currentUser.id).map(s=>s.toUserId); let matchedIds=matches.filter(m=>m.users.includes(currentUser.id)).flatMap(m=>m.users).filter(id=>id!==currentUser.id); let blocked=currentUser.blockedUsers||[]; return users.filter(u=>u.id!==currentUser.id && !swipedIds.includes(u.id) && !matchedIds.includes(u.id) && !blocked.includes(u.id) && !u.isBanned && u.id!=='ai_connectly_bot'); }
+    function handleSwipe(toUserId,dir){ const target=findUserById(toUserId); if(!target) return; if(swipes.find(s=>s.fromUserId===currentUser.id && s.toUserId===toUserId)) return; swipes.push({ fromUserId:currentUser.id, toUserId, direction:dir, timestamp:Date.now() }); if(dir==='like'){ const mutual=swipes.find(s=>s.fromUserId===toUserId && s.toUserId===currentUser.id && s.direction==='like'); if(mutual){ const matchId=`m_${Date.now()}`; matches.push({ id:matchId, users:[currentUser.id,toUserId], createdAt:Date.now(), lastMessage:'' }); saveData(); alert(`💖 It's a match!`); renderCurrentPage(); return; } } saveData(); renderCurrentPage(); }
+    function renderDiscover(){ let candidates=getDiscoverUsers(); if(candidates.length===0){ document.getElementById('discoverPage').innerHTML=`<div class="text-center p-10">✨ No new profiles</div>`; return; } const user=candidates[0]; document.getElementById('discoverPage').innerHTML=`<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden"><img src="${user.photos[0]}" class="w-full h-80 object-cover"><div class="p-4"><h3 class="text-2xl font-bold">${user.name}, ${user.age}</h3><p>${user.location}</p><p>${user.bio}</p><div class="flex flex-wrap gap-1 mt-2">${user.interests.map(i=>`<span class="bg-pink-100 dark:bg-pink-900 text-pink-700 text-xs px-2 py-1 rounded-full">${i}</span>`).join('')}</div></div><div class="flex justify-around p-4"><button id="swipeLeft" class="bg-red-500 p-4 rounded-full"><i class="fas fa-times text-white text-2xl"></i></button><button id="swipeRight" class="bg-green-500 p-4 rounded-full"><i class="fas fa-heart text-white text-2xl"></i></button></div></div>`; document.getElementById('swipeLeft').onclick=()=>handleSwipe(user.id,'dislike'); document.getElementById('swipeRight').onclick=()=>handleSwipe(user.id,'like'); }
+    function renderVIPHub(){ const container=document.getElementById('vipPage'); container.innerHTML=`<div class="bg-gradient-to-r from-pink-500 to-purple-500 p-6 rounded-2xl text-white text-center"><i class="fas fa-gem text-4xl"></i><h2 class="text-2xl font-bold">Premium Features</h2><button id="upgradeBtn" class="mt-3 bg-white text-pink-600 px-6 py-2 rounded-full">Upgrade ($9.99/mo)</button></div>`; document.getElementById('upgradeBtn')?.addEventListener('click',()=>{ currentUser.isPremium=true; currentUser.isVerified=true; saveData(); alert("Upgraded! Pink tick added."); renderVIPHub(); renderProfile(); }); }
+    function renderCurrentPage(){ const active=document.querySelector('.active-page')?.id; if(active==='discoverPage') renderDiscover(); else if(active==='matchesPage') renderMatches(); else if(active==='messagesPage') renderMessagesPage(currentOpenMatchId); else if(active==='profilePage') renderProfile(); else if(active==='vipPage') renderVIPHub(); }
+    function navigateTo(pageId){ ['discoverPage','matchesPage','messagesPage','profilePage','vipPage'].forEach(id=>{ const el=document.getElementById(id); if(id===pageId+'Page'){ el.classList.remove('hidden'); el.classList.add('active-page'); } else { el.classList.add('hidden'); el.classList.remove('active-page'); } }); renderCurrentPage(); }
+    function logout(){ currentUser=null; document.getElementById('appContainer').classList.add('hidden'); document.getElementById('authContainer').classList.remove('hidden'); }
+    
+    // ---------- AUTH (fixed) ----------
+    function login(email, pwd, isGoogle=false){
       loadData();
-      const user = users.find(u=>u.email===email && atob(u.password)===pwd);
-      if(user && !user.isBanned){ currentUser=user; currentUser.onlineStatus=true; currentUser.lastActive=Date.now(); saveData(); document.getElementById('authContainer').classList.add('hidden'); document.getElementById('appContainer').classList.remove('hidden'); navigateTo('discoverPage'); renderProfile(); if(currentUser.isAdmin) renderAdminDashboard(); else document.getElementById('adminNavBtn').classList.add('hidden'); } else alert("Invalid or banned account");
+      let user = users.find(u=>u.email===email && atob(u.password)===pwd);
+      if(!user && isGoogle){
+        if(isFakeEmail(email)){ alert("Fake email domains not allowed."); return false; }
+        if(users.find(u=>u.email===email)){ alert("Email already exists. Please log in normally."); return false; }
+        const newUser = createUserTemplate('g'+Date.now(), email, 'google_auth', email.split('@')[0], 25, 'non-binary', 'Global', false, false);
+        users.push(newUser);
+        saveData();
+        user = newUser;
+      }
+      if(user && !user.isBanned){
+        currentUser = user;
+        ensureMatchWithAIBot(currentUser.id);
+        saveData();
+        document.getElementById('authContainer').classList.add('hidden');
+        document.getElementById('appContainer').classList.remove('hidden');
+        navigateTo('discover');
+        return true;
+      } else {
+        alert("Invalid credentials or account banned.");
+        return false;
+      }
     }
+    
     function register(name, email, pwd, age, gender, location){
-      loadData();
-      if(users.find(u=>u.email===email)) return alert("Email exists");
-      const newUser = { id: 'u'+Date.now(), email, password: btoa(pwd), name, bio: 'New here!', age: parseInt(age), gender, preferences: gender==='male'?'female':'male', interests: [], location, photos: ['https://randomuser.me/api/portraits/lego/1.jpg'], isVerified: false, isPremium: false, isAdmin: false, isBanned: false, isBoosted: false, likesReceived: [], swipesGiven: [], matches: [], blockedUsers: [], privacySettings: { hideProfile: false, visibility: 'public' }, onlineStatus: true, lastActive: Date.now() };
-      users.push(newUser); saveData(); login(email, pwd);
+      if(isFakeEmail(email)){ alert("Fake email domains not allowed."); return; }
+      if(users.find(u=>u.email===email)){ alert("Email already registered."); return; }
+      const newUser = createUserTemplate('u'+Date.now(), email, pwd, name, parseInt(age), gender, location, false, false);
+      users.push(newUser);
+      saveData();
+      login(email, pwd);
     }
-    window.onload = ()=>{ initMockData(); loadData(); document.getElementById('doLoginBtn').onclick=()=>login(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value); document.getElementById('doRegisterBtn').onclick=()=>register(document.getElementById('regName').value, document.getElementById('regEmail').value, document.getElementById('regPassword').value, document.getElementById('regAge').value, document.getElementById('regGender').value, document.getElementById('regLocation').value); document.getElementById('loginTabBtn').onclick=()=>{ document.getElementById('loginForm').style.display='block'; document.getElementById('registerForm').classList.add('hidden'); }; document.getElementById('registerTabBtn').onclick=()=>{ document.getElementById('loginForm').style.display='none'; document.getElementById('registerForm').classList.remove('hidden'); }; document.getElementById('logoutBtn').onclick=()=>{ currentUser=null; document.getElementById('appContainer').classList.add('hidden'); document.getElementById('authContainer').classList.remove('hidden'); }; document.getElementById('themeToggle').onclick=()=>document.documentElement.classList.toggle('dark'); document.querySelectorAll('.nav-btn').forEach(btn=>btn.addEventListener('click',(e)=>{ let page = e.currentTarget.dataset.nav; if(page==='admin' && !currentUser?.isAdmin) return; navigateTo(page+'Page'); })); };
+    
+    function googleSignIn(){ 
+      let email = prompt("Enter your Google email address (simulated):", "user@gmail.com"); 
+      if(email && email.includes('@') && !isFakeEmail(email)) login(email, 'google_auth', true); 
+      else alert("Please enter a valid email address."); 
+    }
+
+    window.onload = () => {
+      initMockData(); loadData();
+      document.getElementById('doLoginBtn').onclick = () => login(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value);
+      document.getElementById('doRegisterBtn').onclick = () => register(document.getElementById('regName').value, document.getElementById('regEmail').value, document.getElementById('regPassword').value, document.getElementById('regAge').value, document.getElementById('regGender').value, document.getElementById('regLocation').value);
+      document.getElementById('googleSignInBtn').onclick = googleSignIn;
+      document.getElementById('loginTabBtn').onclick = () => { document.getElementById('loginForm').style.display = 'block'; document.getElementById('registerForm').classList.add('hidden'); };
+      document.getElementById('registerTabBtn').onclick = () => { document.getElementById('loginForm').style.display = 'none'; document.getElementById('registerForm').classList.remove('hidden'); };
+      document.getElementById('logoutBtn').onclick = logout;
+      document.getElementById('themeToggle').onclick = () => document.documentElement.classList.toggle('dark');
+      document.querySelectorAll('.nav-btn').forEach(btn => btn.addEventListener('click', (e) => { let page = e.currentTarget.dataset.nav; navigateTo(page); }));
+    };
   </script>
 </body>
 </html>
