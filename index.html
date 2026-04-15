@@ -7,13 +7,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* ========== ALL CSS STYLES (same as before) ========== */
+        /* ========== ALL CSS STYLES ========== */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Poppins', sans-serif; }
         body { min-height: 100vh; background: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=2070&auto=format') center/cover no-repeat fixed; }
         .bg-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.25); backdrop-filter: blur(4px); z-index: -1; }
         .glass-card { background: rgba(255, 255, 255, 0.18); backdrop-filter: blur(14px); border-radius: 32px; border: 1px solid rgba(255, 255, 255, 0.35); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2); transition: transform 0.2s, box-shadow 0.2s; }
         .gradient-btn { background: linear-gradient(135deg, #c5e99b 0%, #56ab2f 100%); border: none; color: #1e2a1e; font-weight: 700; padding: 14px 20px; border-radius: 60px; width: 100%; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; }
         .gradient-btn:hover { transform: scale(0.98); }
+        .google-btn { background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.4); color: white; margin-top: 12px; }
+        .google-btn:hover { background: rgba(255, 255, 255, 0.3); }
         .auth-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; }
         .auth-card { width: 100%; max-width: 440px; padding: 2rem 1.8rem; text-align: center; }
         .logo-icon { font-size: 3.2rem; color: #ffdf7e; }
@@ -23,6 +25,10 @@
         .input-group input, .input-group select { width: 100%; padding: 14px 20px 14px 48px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); border-radius: 60px; font-size: 1rem; color: white; }
         .toggle-pwd { position: absolute; right: 18px; top: 50%; transform: translateY(-50%); cursor: pointer; color: white; }
         .switch-auth a { color: #ffec99; text-decoration: none; }
+        .divider { display: flex; align-items: center; text-align: center; color: rgba(255,255,255,0.6); margin: 16px 0; }
+        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid rgba(255,255,255,0.3); }
+        .divider::before { margin-right: 12px; }
+        .divider::after { margin-left: 12px; }
         .app-main { display: none; max-width: 550px; margin: 0 auto; padding: 20px 12px 80px; min-height: 100vh; }
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(20,20,30,0.85); backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.2); display: flex; justify-content: space-around; align-items: center; padding: 12px 20px 24px; z-index: 1000; }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #ccc; font-size: 0.7rem; cursor: pointer; transition: 0.2s; padding: 4px 12px; border-radius: 30px; }
@@ -116,14 +122,15 @@
         .blocked-badge { background: rgba(255,80,80,0.7); padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; margin-left: 8px; }
         .report-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.9); backdrop-filter: blur(20px); border-radius: 28px; padding: 20px; z-index: 2000; width: 80%; max-width: 300px; text-align: center; }
         .report-modal button { margin: 8px; padding: 10px; border-radius: 40px; border: none; cursor: pointer; }
+        .forgot-password { color: #ffec99; font-size: 0.8rem; cursor: pointer; margin-top: 8px; display: inline-block; }
     </style>
 </head>
 <body>
 <div class="bg-overlay"></div>
 
 <!-- LOGIN / SIGNUP -->
-<div id="loginView" class="auth-container"><div class="glass-card auth-card"><div class="logo-area"><i class="fas fa-heart logo-icon"></i><h1>Lumeet</h1><p>where sparks glow</p></div><form id="loginFormElem"><div class="input-group"><i class="fas fa-envelope input-icon"></i><input type="email" id="loginEmail" placeholder="Email" required></div><div class="input-group"><i class="fas fa-lock input-icon"></i><input type="password" id="loginPassword" placeholder="Password"><i class="fas fa-eye-slash toggle-pwd" data-target="loginPassword"></i></div><button type="submit" class="gradient-btn">Log In</button><p class="switch-auth">No account? <a href="#" id="goToSignupLink">Sign up</a></p></form></div></div>
-<div id="signupView" class="auth-container" style="display:none;"><div class="glass-card auth-card"><h2 style="color:white;">Create account</h2><form id="signupFormElem"><div class="input-group"><i class="fas fa-user input-icon"></i><input type="text" id="signupName" placeholder="Full name"></div><div class="input-group"><i class="fas fa-envelope input-icon"></i><input type="email" id="signupEmail" placeholder="Email"></div><div class="input-group"><i class="fas fa-lock input-icon"></i><input type="password" id="signupPassword" placeholder="Password"></div><div class="input-group"><i class="fas fa-check-circle input-icon"></i><input type="password" id="confirmPwd" placeholder="Confirm password"></div><div class="input-group"><i class="fas fa-venus-mars input-icon"></i><select id="signupGender"><option>Female</option><option>Male</option></select></div><div class="input-group"><i class="fas fa-calendar input-icon"></i><input type="number" id="signupAge" placeholder="Age"></div><button type="submit" class="gradient-btn">Create account</button><p class="switch-auth">Already a member? <a href="#" id="goToLoginLink">Log in</a></p></form></div></div>
+<div id="loginView" class="auth-container"><div class="glass-card auth-card"><div class="logo-area"><i class="fas fa-heart logo-icon"></i><h1>Lumeet</h1><p>where sparks glow</p></div><form id="loginFormElem"><div class="input-group"><i class="fas fa-envelope input-icon"></i><input type="email" id="loginEmail" placeholder="Email" required></div><div class="input-group"><i class="fas fa-lock input-icon"></i><input type="password" id="loginPassword" placeholder="Password"><i class="fas fa-eye-slash toggle-pwd" data-target="loginPassword"></i></div><button type="submit" class="gradient-btn">Log In</button><div class="forgot-password" id="forgotPasswordBtn">Forgot Password?</div><div class="divider">or</div><button type="button" id="googleSignInBtn" class="gradient-btn google-btn"><i class="fab fa-google"></i> Sign in with Google</button><p class="switch-auth">No account? <a href="#" id="goToSignupLink">Sign up</a></p></form></div></div>
+<div id="signupView" class="auth-container" style="display:none;"><div class="glass-card auth-card"><h2 style="color:white;">Create account</h2><form id="signupFormElem"><div class="input-group"><i class="fas fa-user input-icon"></i><input type="text" id="signupName" placeholder="Full name"></div><div class="input-group"><i class="fas fa-envelope input-icon"></i><input type="email" id="signupEmail" placeholder="Email"></div><div class="input-group"><i class="fas fa-lock input-icon"></i><input type="password" id="signupPassword" placeholder="Password"></div><div class="input-group"><i class="fas fa-check-circle input-icon"></i><input type="password" id="confirmPwd" placeholder="Confirm password"></div><div class="input-group"><i class="fas fa-venus-mars input-icon"></i><select id="signupGender"><option>Female</option><option>Male</option></select></div><div class="input-group"><i class="fas fa-calendar input-icon"></i><input type="number" id="signupAge" placeholder="Age"></div><button type="submit" class="gradient-btn">Create account</button><div class="divider">or</div><button type="button" id="googleSignUpBtn" class="gradient-btn google-btn"><i class="fab fa-google"></i> Sign up with Google</button><p class="switch-auth">Already a member? <a href="#" id="goToLoginLink">Log in</a></p></form></div></div>
 
 <!-- MAIN APP -->
 <div id="mainApp" class="app-main">
@@ -148,7 +155,7 @@
 <script type="module">
     // ========== FIREBASE IMPORTS ==========
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc, getDocs, updateDoc, collection, addDoc, query, orderBy, onSnapshot, where, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
@@ -167,6 +174,7 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
     const storage = getStorage(app);
+    const googleProvider = new GoogleAuthProvider();
 
     // ========== FIREBASE HELPER FUNCTIONS ==========
     window.signupUser = async (email, password, name, age, gender) => {
@@ -191,9 +199,63 @@
                 location: { lat: 40.7128, lng: -74.0060 },
                 createdAt: Date.now(),
                 online: true,
-                lastSeen: Date.now()
+                lastSeen: Date.now(),
+                emailVerified: false
             });
+            await sendEmailVerification(userCred.user);
+            alert("Account created! Please verify your email before logging in.");
             return userCred.user;
+        } catch (err) {
+            alert(err.message);
+            throw err;
+        }
+    };
+    
+    window.sendEmailVerification = async (user) => {
+        await sendEmailVerification(user);
+    };
+
+    window.resetPassword = async (email) => {
+        try {
+            await sendPasswordResetEmail(auth, email);
+            alert("Password reset email sent! Check your inbox.");
+        } catch (err) {
+            alert(err.message);
+        }
+    };
+
+    window.signInWithGoogle = async () => {
+        try {
+            const result = await signInWithPopup(auth, googleProvider);
+            const user = result.user;
+            // Check if user exists in Firestore
+            const userDoc = await getDoc(doc(db, "users", user.uid));
+            if (!userDoc.exists()) {
+                // Create new user profile for Google sign-in
+                await setDoc(doc(db, "users", user.uid), {
+                    uid: user.uid,
+                    name: user.displayName || user.email.split('@')[0],
+                    email: user.email,
+                    age: 25,
+                    gender: "Female",
+                    bio: "New here!",
+                    interests: [],
+                    profilePic: user.photoURL || "",
+                    matches: [],
+                    swipes: [],
+                    swipesToday: 0,
+                    lastSwipeDate: Date.now(),
+                    blocked: [],
+                    reports: [],
+                    location: { lat: 40.7128, lng: -74.0060 },
+                    createdAt: Date.now(),
+                    online: true,
+                    lastSeen: Date.now(),
+                    emailVerified: user.emailVerified
+                });
+            }
+            await updateDoc(doc(db, "users", user.uid), { online: true, lastSeen: Date.now() });
+            return user;
         } catch (err) {
             alert(err.message);
             throw err;
@@ -203,6 +265,10 @@
     window.loginUserFirebase = async (email, password) => {
         try {
             const userCred = await signInWithEmailAndPassword(auth, email, password);
+            if (!userCred.user.emailVerified) {
+                alert("Please verify your email before logging in. Check your inbox!");
+                throw new Error("Email not verified");
+            }
             await updateDoc(doc(db, "users", userCred.user.uid), { online: true, lastSeen: Date.now() });
             return userCred.user;
         } catch (err) {
@@ -281,6 +347,30 @@
     
     document.getElementById('goToSignupLink')?.addEventListener('click', (e) => { e.preventDefault(); loginView.style.display = 'none'; signupView.style.display = 'flex'; });
     document.getElementById('goToLoginLink')?.addEventListener('click', (e) => { e.preventDefault(); signupView.style.display = 'none'; loginView.style.display = 'flex'; });
+    document.getElementById('forgotPasswordBtn')?.addEventListener('click', () => {
+        const email = prompt("Enter your email address to reset password:");
+        if (email) window.resetPassword(email);
+    });
+    
+    document.getElementById('googleSignInBtn')?.addEventListener('click', async () => {
+        try {
+            const user = await window.signInWithGoogle();
+            const userData = await window.getUserFirebase(user.uid);
+            currentUser = userData;
+            localStorage.setItem('currentUserUid', user.uid);
+            showMainApp();
+        } catch (err) { alert("Google sign-in failed: " + err.message); }
+    });
+    
+    document.getElementById('googleSignUpBtn')?.addEventListener('click', async () => {
+        try {
+            const user = await window.signInWithGoogle();
+            const userData = await window.getUserFirebase(user.uid);
+            currentUser = userData;
+            localStorage.setItem('currentUserUid', user.uid);
+            showMainApp();
+        } catch (err) { alert("Google sign-up failed: " + err.message); }
+    });
     
     document.getElementById('signupFormElem')?.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -293,7 +383,7 @@
         const age = document.getElementById('signupAge').value;
         try {
             await window.signupUser(email, pwd, name, age, gender);
-            alert("Account created! Please login.");
+            alert("Account created! Please verify your email before logging in.");
             signupView.style.display = 'none';
             loginView.style.display = 'flex';
         } catch (err) { alert("Signup failed: " + err.message); }
@@ -392,7 +482,6 @@
             currentUser.swipes = swipes;
             currentUser.swipesToday = (currentUser.swipesToday || 0) + 1;
             
-            // Check for match
             if (target.swipes && target.swipes.includes(currentUser.uid)) {
                 const matches = currentUser.matches || [];
                 if (!matches.includes(target.uid)) {
@@ -443,7 +532,6 @@
         if(gender) filtered = filtered.filter(u => u.gender === gender);
         filtered = filtered.filter(u => u.age >= minAge && u.age <= maxAge);
         
-        // Show pending likes (users who liked current user)
         const pendingLikes = users.filter(u => u.swipes && u.swipes.includes(currentUser.uid) && !currentUser.swipes?.includes(u.uid));
         document.getElementById('pendingLikesList').innerHTML = pendingLikes.map(u => `<div style="padding:8px; border-bottom:1px solid rgba(255,255,255,0.1);"><img src="${u.profilePic || 'https://randomuser.me/api/portraits/lego/1.jpg'}" width="40" style="border-radius:50%;"> ${u.name}, ${u.age} <button class="small-glass like-back" data-id="${u.uid}" style="float:right;">Like Back</button></div>`).join('');
         document.querySelectorAll('.like-back').forEach(btn => {
@@ -530,7 +618,7 @@
         modal.querySelector('#closeReportModal').addEventListener('click', () => modal.remove());
     }
     
-    // Messaging with typing indicators and read receipts
+    // Messaging
     async function renderChatList() {
         const container = document.getElementById('chatListContainer');
         const users = await window.getUsersFirebase();
@@ -594,7 +682,6 @@
             } 
         });
         
-        // Typing indicator listener
         const typingRef = doc(db, "typing", `${currentUser.uid}_${partnerId}`);
         onSnapshot(typingRef, (doc) => {
             if (doc.exists() && doc.data().isTyping && doc.data().userId === partnerId) {
@@ -604,7 +691,6 @@
             }
         });
         
-        // Send typing indicator
         const input = document.getElementById('messageInputChat');
         input.addEventListener('input', async () => {
             await setDoc(typingRef, { userId: currentUser.uid, isTyping: true, timestamp: Date.now() });
@@ -614,7 +700,6 @@
             }, 1000);
         });
         
-        // Load messages with read receipts
         const chatId = [currentUser.uid, partnerId].sort().join('_');
         const messagesArea = document.getElementById('messagesArea');
         const q = query(collection(db, "chats", chatId, "messages"), orderBy("timestamp"));
@@ -633,7 +718,6 @@
             }).join('');
             messagesArea.scrollTop = messagesArea.scrollHeight;
             
-            // Mark messages as read
             const batch = writeBatch(db);
             messages.forEach(msg => {
                 if (msg.senderId === partnerId && !msg.read) {
@@ -727,13 +811,14 @@
         document.getElementById('settingsDetailView').style.display = 'block';
         document.getElementById('settingsTitle').innerText = section.charAt(0).toUpperCase() + section.slice(1);
         let content = '';
-        if (section === 'account') content = `<div class="settings-item"><div>Change email/phone</div><i class="fas fa-chevron-right"></i></div><div class="settings-item"><div>Update password</div><i class="fas fa-chevron-right"></i></div>`;
+        if (section === 'account') content = `<div class="settings-item"><div>Change email/phone</div><i class="fas fa-chevron-right"></i></div><div class="settings-item"><div>Update password</div><i class="fas fa-chevron-right"></i></div><div class="settings-item"><div>Email Verification</div><i class="fas fa-envelope"></i></div>`;
         else if (section === 'privacy') content = `<div class="settings-item"><div>Last seen</div><div class="toggle-switch active"><div class="toggle-knob"></div></div></div><div class="settings-item"><div>Online status</div><div class="toggle-switch active"><div class="toggle-knob"></div></div></div><div class="settings-item"><div>Blocked users</div><i class="fas fa-chevron-right"></i></div>`;
         else if (section === 'dating') content = `<div class="settings-item"><div>Age preference</div><div class="dual-slider-container"><div class="range-values"><span>Min: <span id="minAgeVal">22</span></span><span>Max: <span id="maxAgeVal">35</span></span></div><input type="range" id="minAgeSlider" min="18" max="60" value="22"><input type="range" id="maxAgeSlider" min="18" max="60" value="35"></div></div><div class="settings-item"><div>Distance preference</div><input type="range" id="distancePrefSlider" min="5" max="100" value="50"><span id="distancePrefVal">50</span> km</div><button class="small-glass" id="savePrefsBtn">Save Preferences</button>`;
-        else if (section === 'premium') content = `<div class="premium-card"><i class="fas fa-crown" style="font-size:2rem; color:gold;"></i><h3>Get Verified</h3><p>Blue check badge & priority</p><button class="small-glass" id="verifyBtn">Upgrade Now</button><hr><div><i class="fas fa-infinity"></i> Unlimited swipes<br><i class="fas fa-eye"></i> See who liked you<br><i class="fas fa-undo-alt"></i> Rewind last swipe</div></div>`;
+        else if (section === 'premium') content = `<div class="premium-card"><i class="fas fa-crown" style="font-size:2rem; color:gold;"></i><h3>Get Verified</h3><p>Blue check badge & priority</p><button class="small-glass" id="verifyBtn">Upgrade Now</button><hr><div style="text-align:left; padding:8px;"><strong>Free Plan:</strong><br>• 10 swipes/day<br>• Basic filters<br>• Standard support<br><br><strong style="color:#22c55e;">Plus ($3.27/month):</strong><br>✓ Unlimited swipes<br>✓ See who liked you<br>✓ Rewind last swipe<br>✓ 1 Boost/month<br>✓ No ads<br><br><strong>Premium ($12.99/month):</strong><br>✓ All Plus features<br>✓ Incognito mode<br>✓ Travel mode<br>✓ 5 Boosts/month<br>✓ Priority support</div><button class="gradient-btn" id="subscribePlusBtn" style="margin-top:12px;">Subscribe to Plus - $3.27/month</button></div>`;
         else content = `<div class="settings-item">FAQ</div><div class="settings-item">Contact support</div>`;
         document.getElementById('settingsDetailContent').innerHTML = content;
         if(document.getElementById('verifyBtn')) document.getElementById('verifyBtn').onclick = () => alert("Premium upgrade (UI demo)");
+        if(document.getElementById('subscribePlusBtn')) document.getElementById('subscribePlusBtn').onclick = () => alert("✨ Plus subscription ($3.27/month) - Unlimited swipes, see who liked you, and more! ✨");
         if(document.getElementById('minAgeSlider')) {
             document.getElementById('minAgeSlider').oninput = () => { document.getElementById('minAgeVal').innerText = document.getElementById('minAgeSlider').value; };
             document.getElementById('maxAgeSlider').oninput = () => { document.getElementById('maxAgeVal').innerText = document.getElementById('maxAgeSlider').value; };
