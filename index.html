@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Lumeet | Premium Dating App</title>
+    <title>Lumeet | Real‑time Chat + Online Status</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
@@ -173,7 +173,7 @@
 <script type="module">
     // ========== FIREBASE IMPORTS ==========
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup, sendEmailVerification, updateEmail, updatePassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup, sendEmailVerification, updateEmail, updatePassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc, getDocs, updateDoc, collection, addDoc, query, orderBy, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
@@ -194,10 +194,27 @@
     const googleProvider = new GoogleAuthProvider();
     googleProvider.setCustomParameters({ prompt: 'select_account' });
 
+    // ========== ONLINE STATUS HELPERS ==========
+    async function setUserOnline(uid, isOnline) {
+        await updateDoc(doc(db, "users", uid), { online: isOnline, lastSeen: Date.now() });
+    }
+
+    function formatLastSeen(timestamp) {
+        if (!timestamp) return "Offline";
+        const diff = Date.now() - timestamp;
+        const minutes = Math.floor(diff / 60000);
+        if (minutes < 1) return "Online now";
+        if (minutes < 60) return `Last seen ${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `Last seen ${hours} hour${hours === 1 ? '' : 's'} ago`;
+        const days = Math.floor(hours / 24);
+        return `Last seen ${days} day${days === 1 ? '' : 's'} ago`;
+    }
+
     // ========== PREMIUM HELPER FUNCTIONS ==========
     async function upgradeToPremium(userId, plan) {
         const now = Date.now();
-        const expiresAt = now + 30 * 24 * 60 * 60 * 1000; // 30 days
+        const expiresAt = now + 30 * 24 * 60 * 60 * 1000;
         let features = {};
         if (plan === 'gold') {
             features = { unlimitedSwipes: true, readReceipts: false, seeWhoLikedYou: true, boost: false };
@@ -219,7 +236,6 @@
         const userSnap = await getDoc(doc(db, "users", userId));
         const userData = userSnap.data();
         if (userData.isPremium && userData.premiumExpiresAt && userData.premiumExpiresAt < Date.now()) {
-            // Downgrade to free
             await updateDoc(doc(db, "users", userId), {
                 isPremium: false,
                 premiumPlan: "free",
@@ -231,7 +247,6 @@
         return userData.isPremium;
     }
 
-    // Show upgrade modal
     function showUpgradeModal() {
         const modal = document.createElement('div');
         modal.className = 'upgrade-modal';
@@ -257,7 +272,6 @@
                 const plan = btn.dataset.plan;
                 await upgradeToPremium(currentUser.uid, plan);
                 modal.remove();
-                // Refresh user data
                 const updated = await window.getUserFirebase(currentUser.uid);
                 currentUser = updated;
                 renderProfileUI();
@@ -268,7 +282,7 @@
         modal.querySelector('#closeUpgradeModal').addEventListener('click', () => modal.remove());
     }
 
-    // ========== HELPER FUNCTIONS (Account, Privacy, Dating Preferences) ==========
+    // ========== EXISTING HELPER FUNCTIONS (unchanged) ==========
     window.changeEmail = async (newEmail) => {
         const user = auth.currentUser;
         if (!user) { alert("No user logged in"); return; }
@@ -310,6 +324,12 @@
         currentUser.privacyOnlineStatus = onlineStatusVisible;
         renderChatList();
         renderProfileUI();
+        // If the user turned off online status, immediately set online false in Firestore
+        if (!onlineStatusVisible) {
+            await setUserOnline(currentUser.uid, false);
+        } else {
+            await setUserOnline(currentUser.uid, true);
+        }
     };
     
     window.getBlockedUsers = async () => {
@@ -341,7 +361,7 @@
         if (document.getElementById('exploreView').classList.contains('active-view')) renderExplore();
     };
     
-    // ========== EXISTING FIREBASE FUNCTIONS (updated with premium fields) ==========
+    // ========== FIREBASE AUTH & USER FUNCTIONS (updated with online status) ==========
     window.signupUser = async (email, password, name, age, gender) => {
         try {
             const userCred = await createUserWithEmailAndPassword(auth, email, password);
@@ -389,8 +409,9 @@
                     uid: user.uid, name: user.displayName || user.email.split('@')[0], email: user.email,
                     age: 25, gender: "Female", bio: "New here!", interests: [], profilePic: user.photoURL || "",
                     matches: [], swipes: [], swipesToday: 0, lastSwipeDate: Date.now(), blocked: [], reports: [],
-                    location: { lat: 40.7128, lng: -74.0060 }, createdAt: Date.now(), online: true, lastSeen: Date.now(),
-                    emailVerified: true, privacyLastSeen: true, privacyOnlineStatus: true,
+                    location: { lat: 40.7128, lng: -74.0060 }, createdAt: Date.now(),
+                    online: true, lastSeen: Date.now(), emailVerified: true,
+                    privacyLastSeen: true, privacyOnlineStatus: true,
                     prefAgeMin: 18, prefAgeMax: 100, prefDistance: 50,
                     isPremium: false, premiumPlan: "free", premiumExpiresAt: 0,
                     features: { unlimitedSwipes: false, readReceipts: false, seeWhoLikedYou: false, boost: false }
@@ -487,19 +508,17 @@
         signupView.style.display = 'none';
         mainApp.style.display = 'block';
         await loadCurrentUser();
-        // Set up real-time listener for premium changes
+        // Set up real-time listener for premium and privacy changes
         if (unsubscribeUser) unsubscribeUser();
         const userRef = doc(db, "users", currentUser.uid);
         unsubscribeUser = onSnapshot(userRef, (docSnap) => {
             if (docSnap.exists()) {
                 const newData = docSnap.data();
-                // Update currentUser in memory
                 currentUser = { ...currentUser, ...newData };
-                // Re-render premium-dependent UI
                 renderProfileUI();
                 renderSwipeCards();
                 renderExplore();
-                renderChatList(); // for read receipts toggle
+                renderChatList();
             }
         });
         await renderAll();
@@ -507,13 +526,23 @@
         await renderSwipeCards();
         renderChatList();
         updateOnlineStatus();
+        // Set user online on login
+        await setUserOnline(currentUser.uid, true);
+        // Set offline on page unload
+        window.addEventListener('beforeunload', async () => {
+            if (currentUser) await setUserOnline(currentUser.uid, false);
+        });
     }
     
-    async function updateOnlineStatus() { setInterval(async () => { if (currentUser) await window.updateUserFirebase(currentUser.uid, { lastSeen: Date.now() }); }, 30000); }
+    async function updateOnlineStatus() { 
+        setInterval(async () => { 
+            if (currentUser) await window.updateUserFirebase(currentUser.uid, { lastSeen: Date.now() }); 
+        }, 30000); 
+    }
+    
     async function loadCurrentUser() { const uid = localStorage.getItem('currentUserUid'); if (uid) { currentUser = await window.getUserFirebase(uid); if (!currentUser) { localStorage.removeItem('currentUserUid'); window.location.reload(); } } }
     
     async function checkDailySwipes() {
-        // Premium check
         if (currentUser.features?.unlimitedSwipes === true) {
             document.getElementById('swipeCounter').innerText = `✨ Unlimited swipes (Premium) ✨`;
             return true;
@@ -541,7 +570,6 @@
         if(gender) filtered = filtered.filter(u => u.gender === gender); 
         filtered = filtered.filter(u => u.age >= minAge && u.age <= maxAge); 
         
-        // Pending likes – only show if premium feature enabled
         const pendingLikes = users.filter(u => u.swipes && u.swipes.includes(currentUser.uid) && !currentUser.swipes?.includes(u.uid));
         const matchQueueDiv = document.getElementById('matchQueue');
         if (currentUser.features?.seeWhoLikedYou === true) {
@@ -559,7 +587,45 @@
     
     function showReportModal(userId, userName) { const modal = document.createElement('div'); modal.className = 'report-modal'; modal.innerHTML = `<h3 style="color:white;">Report ${userName}</h3><button data-reason="Spam">Spam</button><button data-reason="Inappropriate">Inappropriate</button><button data-reason="Fake Profile">Fake Profile</button><button data-reason="Harassment">Harassment</button><button data-reason="Other">Other</button><button id="closeReportModal">Cancel</button>`; document.body.appendChild(modal); modal.querySelectorAll('[data-reason]').forEach(btn => { btn.addEventListener('click', async () => { await window.reportUser(currentUser.uid, userId, btn.dataset.reason); modal.remove(); }); }); modal.querySelector('#closeReportModal').addEventListener('click', () => modal.remove()); }
     
-    async function renderChatList() { const container = document.getElementById('chatListContainer'); const users = await window.getUsersFirebase(); const matches = users.filter(u => currentUser?.matches?.includes(u.uid) && !(currentUser.blocked || []).includes(u.uid)); if(matches.length === 0){ container.innerHTML = `<div class="glass-card" style="padding:20px;text-align:center;">No matches yet. Start swiping!</div>`; return; } container.innerHTML = matches.map(m => `<div class="chat-list-item" data-id="${m.uid}"><div style="position:relative;"><img class="avatar" src="${m.profilePic || 'https://randomuser.me/api/portraits/lego/1.jpg'}">${(m.privacyOnlineStatus !== false && m.online) ? '<span class="online-dot"></span>' : ''}</div><div class="chat-info"><div class="chat-name">${m.name}</div><div class="last-msg">Tap to chat</div></div><div class="chat-meta"><button class="small-glass block-chat-btn" data-id="${m.uid}" style="background:rgba(255,80,80,0.5); padding:4px 8px;">Block</button></div></div>`).join(''); document.querySelectorAll('.chat-list-item').forEach(el => el.addEventListener('click', (e) => { if(!e.target.classList.contains('block-chat-btn')) openChatScreen(el.dataset.id); })); document.querySelectorAll('.block-chat-btn').forEach(btn => { btn.addEventListener('click', async (e) => { e.stopPropagation(); const targetId = btn.dataset.id; if(confirm("Block this user?")) { await window.blockUser(currentUser.uid, targetId); currentUser.blocked = currentUser.blocked || []; currentUser.blocked.push(targetId); await renderChatList(); } }); }); }
+    // ========== UPDATED CHAT FUNCTIONS WITH ONLINE STATUS AND LAST SEEN ==========
+    async function renderChatList() { 
+        const container = document.getElementById('chatListContainer'); 
+        const users = await window.getUsersFirebase(); 
+        const matches = users.filter(u => currentUser?.matches?.includes(u.uid) && !(currentUser.blocked || []).includes(u.uid)); 
+        if(matches.length === 0){ 
+            container.innerHTML = `<div class="glass-card" style="padding:20px;text-align:center;">No matches yet. Start swiping!</div>`; 
+            return; 
+        } 
+        container.innerHTML = matches.map(m => {
+            const showOnlineDot = (m.privacyOnlineStatus !== false && m.online === true);
+            return `<div class="chat-list-item" data-id="${m.uid}">
+                        <div style="position:relative;">
+                            <img class="avatar" src="${m.profilePic || 'https://randomuser.me/api/portraits/lego/1.jpg'}">
+                            ${showOnlineDot ? '<span class="online-dot"></span>' : ''}
+                        </div>
+                        <div class="chat-info">
+                            <div class="chat-name">${m.name}</div>
+                            <div class="last-msg">Tap to chat</div>
+                        </div>
+                        <div class="chat-meta">
+                            <button class="small-glass block-chat-btn" data-id="${m.uid}" style="background:rgba(255,80,80,0.5); padding:4px 8px;">Block</button>
+                        </div>
+                    </div>`;
+        }).join(''); 
+        document.querySelectorAll('.chat-list-item').forEach(el => el.addEventListener('click', (e) => { if(!e.target.classList.contains('block-chat-btn')) openChatScreen(el.dataset.id); })); 
+        document.querySelectorAll('.block-chat-btn').forEach(btn => { 
+            btn.addEventListener('click', async (e) => { 
+                e.stopPropagation(); 
+                const targetId = btn.dataset.id; 
+                if(confirm("Block this user?")) { 
+                    await window.blockUser(currentUser.uid, targetId); 
+                    currentUser.blocked = currentUser.blocked || []; 
+                    currentUser.blocked.push(targetId); 
+                    await renderChatList(); 
+                } 
+            }); 
+        }); 
+    }
     
     async function openChatScreen(partnerId) { 
         currentChatPartner = partnerId; 
@@ -568,14 +634,62 @@
         document.getElementById('chatListContainer').style.display = 'none'; 
         const screenDiv = document.getElementById('chatScreenContainer'); 
         screenDiv.style.display = 'block'; 
-        screenDiv.innerHTML = `<div class="chat-header"><button class="back-btn" id="backToChatList"><i class="fas fa-arrow-left"></i></button><div class="chat-profile"><img src="${partner.profilePic || 'https://randomuser.me/api/portraits/lego/1.jpg'}" id="chatAvatar"><div><div class="chat-name">${partner.name}</div><div class="chat-status" id="chatStatus">${(partner.privacyOnlineStatus !== false && partner.online) ? 'Online' : 'Offline'}</div><div id="typingStatus" style="font-size:0.7rem; color:#ccc;"></div></div></div><div class="chat-actions"><i class="fas fa-phone" id="callDemo"></i><i class="fas fa-video" id="videoDemo"></i><i class="fas fa-ban" id="blockFromChat" style="color:#ff6b6b;"></i><i class="fas fa-ellipsis-v" id="menuUnmatch"></i></div></div><div class="messages-area" id="messagesArea"></div><div class="input-area"><input type="text" id="messageInputChat" placeholder="Type a message..."><button id="sendChatMsg"><i class="fas fa-paper-plane"></i></button></div>`; 
+        
+        // Determine status text based on privacy settings
+        let statusText = '';
+        if (partner.privacyOnlineStatus !== false && partner.online === true) {
+            statusText = 'Online';
+        } else if (partner.privacyLastSeen !== false && partner.lastSeen) {
+            statusText = formatLastSeen(partner.lastSeen);
+        } else {
+            statusText = 'Offline';
+        }
+        
+        screenDiv.innerHTML = `<div class="chat-header">
+                                    <button class="back-btn" id="backToChatList"><i class="fas fa-arrow-left"></i></button>
+                                    <div class="chat-profile">
+                                        <img src="${partner.profilePic || 'https://randomuser.me/api/portraits/lego/1.jpg'}" id="chatAvatar">
+                                        <div>
+                                            <div class="chat-name">${partner.name}</div>
+                                            <div class="chat-status" id="chatStatus">${statusText}</div>
+                                            <div id="typingStatus" style="font-size:0.7rem; color:#ccc;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="chat-actions">
+                                        <i class="fas fa-phone" id="callDemo"></i>
+                                        <i class="fas fa-video" id="videoDemo"></i>
+                                        <i class="fas fa-ban" id="blockFromChat" style="color:#ff6b6b;"></i>
+                                        <i class="fas fa-ellipsis-v" id="menuUnmatch"></i>
+                                    </div>
+                                </div>
+                                <div class="messages-area" id="messagesArea"></div>
+                                <div class="input-area">
+                                    <input type="text" id="messageInputChat" placeholder="Type a message...">
+                                    <button id="sendChatMsg"><i class="fas fa-paper-plane"></i></button>
+                                </div>`; 
+        
         document.getElementById('backToChatList').addEventListener('click', () => { screenDiv.style.display = 'none'; document.getElementById('chatListContainer').style.display = 'block'; currentChatPartner = null; renderChatList(); }); 
         document.getElementById('blockFromChat')?.addEventListener('click', async () => { if(confirm(`Block ${partner.name}?`)) { await window.blockUser(currentUser.uid, partnerId); currentUser.blocked = currentUser.blocked || []; currentUser.blocked.push(partnerId); document.getElementById('backToChatList').click(); } }); 
         document.getElementById('menuUnmatch')?.addEventListener('click', async () => { if(confirm(`Unmatch ${partner.name}?`)){ const matches = currentUser.matches.filter(id => id !== partnerId); await window.updateUserFirebase(currentUser.uid, { matches }); currentUser.matches = matches; document.getElementById('backToChatList').click(); } }); 
+        
+        // Real‑time typing indicator
         const typingRef = doc(db, "typing", `${currentUser.uid}_${partnerId}`); 
-        onSnapshot(typingRef, (doc) => { if (doc.exists() && doc.data().isTyping && doc.data().userId === partnerId) document.getElementById('typingStatus').innerText = "typing..."; else document.getElementById('typingStatus').innerText = ""; }); 
+        onSnapshot(typingRef, (doc) => { 
+            if (doc.exists() && doc.data().isTyping && doc.data().userId === partnerId) 
+                document.getElementById('typingStatus').innerHTML = "typing..."; 
+            else 
+                document.getElementById('typingStatus').innerHTML = ""; 
+        }); 
         const input = document.getElementById('messageInputChat'); 
-        input.addEventListener('input', async () => { await setDoc(typingRef, { userId: currentUser.uid, isTyping: true, timestamp: Date.now() }); if (typingTimeout) clearTimeout(typingTimeout); typingTimeout = setTimeout(async () => { await setDoc(typingRef, { userId: currentUser.uid, isTyping: false, timestamp: Date.now() }); }, 1000); }); 
+        input.addEventListener('input', async () => { 
+            await setDoc(typingRef, { userId: currentUser.uid, isTyping: true, timestamp: Date.now() }); 
+            if (typingTimeout) clearTimeout(typingTimeout); 
+            typingTimeout = setTimeout(async () => { 
+                await setDoc(typingRef, { userId: currentUser.uid, isTyping: false, timestamp: Date.now() }); 
+            }, 1000); 
+        }); 
+        
+        // Real‑time messages
         const chatId = [currentUser.uid, partnerId].sort().join('_'); 
         const messagesArea = document.getElementById('messagesArea'); 
         const q = query(collection(db, "chats", chatId, "messages"), orderBy("timestamp")); 
@@ -616,15 +730,10 @@
         document.getElementById('viewsCount').innerText = "0"; 
         updateProfileCompletion(); 
         
-        // Premium badge
         const premiumBadge = document.getElementById('premiumBadge');
-        if (currentUser.isPremium) {
-            premiumBadge.style.display = 'inline-block';
-        } else {
-            premiumBadge.style.display = 'none';
-        }
+        if (currentUser.isPremium) premiumBadge.style.display = 'inline-block';
+        else premiumBadge.style.display = 'none';
         
-        // Boost button – only if premium feature enabled
         const boostBtn = document.getElementById('boostProfileBtn');
         if (currentUser.features?.boost === true) {
             boostBtn.onclick = () => alert("✨ Boost activated! Your profile is now at the top for 30 minutes. ✨");
@@ -647,7 +756,11 @@
         document.getElementById('shareProfileBtn').onclick = () => alert("Share profile link (demo)"); 
         document.getElementById('changePhotoBtn').onclick = () => document.getElementById('photoUploadInput').click(); 
         document.getElementById('photoUploadInput').onchange = async (e) => { if(e.target.files[0]){ const url = await window.uploadProfileImage(e.target.files[0], currentUser.uid); await window.updateUserFirebase(currentUser.uid, { profilePic: url }); currentUser.profilePic = url; document.getElementById('profileAvatar').src = url; alert("Profile photo updated!"); } }; 
-        document.getElementById('logoutBtnProfile').onclick = () => { localStorage.removeItem('currentUserUid'); window.location.reload(); }; 
+        document.getElementById('logoutBtnProfile').onclick = async () => { 
+            await setUserOnline(currentUser.uid, false);
+            localStorage.removeItem('currentUserUid'); 
+            window.location.reload(); 
+        }; 
         document.getElementById('upgradeBtn').onclick = () => showUpgradeModal();
     }
     
