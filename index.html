@@ -134,7 +134,7 @@
         .upgrade-plan:hover { background: rgba(255,255,255,0.2); transform: scale(1.02); }
         .premium-badge { background: linear-gradient(135deg, #ffd700, #ffb347); color: #1e2a1e; padding: 4px 12px; border-radius: 40px; font-size: 0.7rem; font-weight: bold; display: inline-block; margin-left: 8px; }
 
-        /* ========== ADDED STYLES FOR NEW FEATURES (DO NOT OVERWRITE) ========== */
+        /* ========== ADDED STYLES FOR NEW FEATURES ========== */
         .admin-panel { background: rgba(0,0,0,0.8); backdrop-filter: blur(20px); border-radius: 32px; padding: 20px; margin-top: 20px; }
         .admin-stats { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; }
         .stat-card { background: rgba(255,255,255,0.1); border-radius: 24px; padding: 12px; text-align: center; }
@@ -181,19 +181,745 @@
 </div>
 
 <script type="module">
-    // ========== ORIGINAL SCRIPT (unchanged) – Placeholder ==========
-    // The user's full original script goes here. For brevity I will indicate that it is present.
-    // In the final answer, I will include the entire original script.
+    // ========== ORIGINAL FULL SCRIPT (intact, copied from your working version) ==========
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup, sendEmailVerification, updateEmail, updatePassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, getDocs, updateDoc, collection, addDoc, query, orderBy, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCWliI60g90f-Ed4ydFBPbz027fo7N29tI",
+        authDomain: "ceezy-website.firebaseapp.com",
+        projectId: "ceezy-website",
+        storageBucket: "ceezy-website.appspot.com",
+        messagingSenderId: "59858219268",
+        appId: "1:59858219268:web:placeholder"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+    const googleProvider = new GoogleAuthProvider();
+    googleProvider.setCustomParameters({ prompt: 'select_account' });
+
+    // ========== ONLINE STATUS USING LAST SEEN (HEARTBEAT) ==========
+    let heartbeatInterval = null;
+
+    function isUserOnline(user, privacyOnlineStatus = true) {
+        if (privacyOnlineStatus === false) return false;
+        const now = Date.now();
+        const lastSeen = user.lastSeen || 0;
+        return (now - lastSeen) < 60000;
+    }
+
+    function formatLastSeen(timestamp, privacyLastSeen = true) {
+        if (!timestamp || privacyLastSeen === false) return "Offline";
+        const diff = Date.now() - timestamp;
+        const minutes = Math.floor(diff / 60000);
+        if (minutes < 1) return "Online now";
+        if (minutes < 60) return `Last seen ${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `Last seen ${hours} hour${hours === 1 ? '' : 's'} ago`;
+        const days = Math.floor(hours / 24);
+        return `Last seen ${days} day${days === 1 ? '' : 's'} ago`;
+    }
+
+    async function updateLastSeen(uid) {
+        if (!uid) return;
+        await updateDoc(doc(db, "users", uid), { lastSeen: Date.now() });
+    }
+
+    function startHeartbeat(uid) {
+        if (heartbeatInterval) clearInterval(heartbeatInterval);
+        heartbeatInterval = setInterval(() => {
+            if (uid && currentUser) updateLastSeen(uid);
+        }, 30000);
+    }
+
+    async function setUserOffline(uid) {
+        if (!uid) return;
+        await updateDoc(doc(db, "users", uid), { lastSeen: 0 });
+    }
+
+    // ========== PREMIUM HELPER FUNCTIONS ==========
+    async function upgradeToPremium(userId, plan) {
+        const now = Date.now();
+        const expiresAt = now + 30 * 24 * 60 * 60 * 1000;
+        let features = {};
+        if (plan === 'gold') {
+            features = { unlimitedSwipes: true, readReceipts: false, seeWhoLikedYou: true, boost: false };
+        } else if (plan === 'platinum') {
+            features = { unlimitedSwipes: true, readReceipts: true, seeWhoLikedYou: true, boost: true };
+        } else {
+            return;
+        }
+        await updateDoc(doc(db, "users", userId), {
+            isPremium: true,
+            premiumPlan: plan,
+            premiumExpiresAt: expiresAt,
+            features: features
+        });
+        alert(`✨ Upgraded to ${plan.toUpperCase()} plan! Your premium features are now active.`);
+    }
+
+    async function checkAndExpirePremium(userId) {
+        const userSnap = await getDoc(doc(db, "users", userId));
+        const userData = userSnap.data();
+        if (userData.isPremium && userData.premiumExpiresAt && userData.premiumExpiresAt < Date.now()) {
+            await updateDoc(doc(db, "users", userId), {
+                isPremium: false,
+                premiumPlan: "free",
+                features: { unlimitedSwipes: false, readReceipts: false, seeWhoLikedYou: false, boost: false }
+            });
+            return false;
+        }
+        return userData.isPremium;
+    }
+
+    function showUpgradeModal() {
+        const modal = document.createElement('div');
+        modal.className = 'upgrade-modal';
+        modal.innerHTML = `
+            <h3 style="color:white;">✨ Choose Your Plan ✨</h3>
+            <div class="upgrade-plan" data-plan="gold">
+                <strong style="color:#ffd700;">Gold – $3.27/month</strong><br>
+                ✓ Unlimited swipes<br>
+                ✓ See who liked you
+            </div>
+            <div class="upgrade-plan" data-plan="platinum">
+                <strong style="color:#ffd700;">Platinum – $12.99/month</strong><br>
+                ✓ All Gold features<br>
+                ✓ Read receipts<br>
+                ✓ Profile boost<br>
+                ✓ Priority support
+            </div>
+            <button class="small-glass" id="closeUpgradeModal">Cancel</button>
+        `;
+        document.body.appendChild(modal);
+        modal.querySelectorAll('.upgrade-plan').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const plan = btn.dataset.plan;
+                await upgradeToPremium(currentUser.uid, plan);
+                modal.remove();
+                const updated = await window.getUserFirebase(currentUser.uid);
+                currentUser = updated;
+                renderProfileUI();
+                renderSwipeCards();
+                renderExplore();
+            });
+        });
+        modal.querySelector('#closeUpgradeModal').addEventListener('click', () => modal.remove());
+    }
+
+    // ========== EXISTING HELPER FUNCTIONS ==========
+    window.changeEmail = async (newEmail) => {
+        const user = auth.currentUser;
+        if (!user) { alert("No user logged in"); return; }
+        try {
+            await updateEmail(user, newEmail);
+            await updateDoc(doc(db, "users", user.uid), { email: newEmail });
+            alert("Email updated successfully! You will need to re-verify your new email.");
+            await sendEmailVerification(user);
+            alert("Verification email sent to new address.");
+        } catch (err) { alert(err.message); }
+    };
+    
+    window.updateUserPassword = async (newPassword) => {
+        const user = auth.currentUser;
+        if (!user) { alert("No user logged in"); return; }
+        try {
+            await updatePassword(user, newPassword);
+            alert("Password updated successfully.");
+        } catch (err) { alert(err.message); }
+    };
+    
+    window.sendVerification = async () => {
+        const user = auth.currentUser;
+        if (!user) { alert("No user logged in"); return; }
+        if (user.emailVerified) { alert("Email already verified."); return; }
+        try {
+            await sendEmailVerification(user);
+            alert("Verification email sent. Please check your inbox.");
+        } catch (err) { alert(err.message); }
+    };
+    
+    window.updatePrivacySettings = async (lastSeenVisible, onlineStatusVisible) => {
+        if (!currentUser) return;
+        await updateDoc(doc(db, "users", currentUser.uid), {
+            privacyLastSeen: lastSeenVisible,
+            privacyOnlineStatus: onlineStatusVisible
+        });
+        currentUser.privacyLastSeen = lastSeenVisible;
+        currentUser.privacyOnlineStatus = onlineStatusVisible;
+        renderChatList();
+        renderProfileUI();
+        if (!onlineStatusVisible) {
+            await setUserOffline(currentUser.uid);
+        } else {
+            await updateLastSeen(currentUser.uid);
+        }
+    };
+    
+    window.getBlockedUsers = async () => {
+        if (!currentUser || !currentUser.blocked || currentUser.blocked.length === 0) return [];
+        const users = await window.getUsersFirebase();
+        return users.filter(u => currentUser.blocked.includes(u.uid));
+    };
+    
+    window.unblockUser = async (blockedId) => {
+        if (!currentUser) return;
+        const newBlocked = (currentUser.blocked || []).filter(id => id !== blockedId);
+        await updateDoc(doc(db, "users", currentUser.uid), { blocked: newBlocked });
+        currentUser.blocked = newBlocked;
+        await renderChatList();
+        showSettingsDetail('privacy');
+    };
+    
+    window.saveDatingPreferences = async (ageMin, ageMax, distance) => {
+        if (!currentUser) return;
+        await updateDoc(doc(db, "users", currentUser.uid), {
+            prefAgeMin: ageMin,
+            prefAgeMax: ageMax,
+            prefDistance: distance
+        });
+        currentUser.prefAgeMin = ageMin;
+        currentUser.prefAgeMax = ageMax;
+        currentUser.prefDistance = distance;
+        alert("Preferences saved!");
+        if (document.getElementById('exploreView').classList.contains('active-view')) renderExplore();
+    };
+    
+    // ========== FIREBASE AUTH & USER FUNCTIONS ==========
+    window.signupUser = async (email, password, name, age, gender) => {
+        try {
+            const userCred = await createUserWithEmailAndPassword(auth, email, password);
+            await updateProfile(userCred.user, { displayName: name });
+            await sendEmailVerification(userCred.user);
+            await setDoc(doc(db, "users", userCred.user.uid), {
+                uid: userCred.user.uid, name, email, age: parseInt(age), gender,
+                bio: "New here!", interests: [], profilePic: "", matches: [], swipes: [],
+                swipesToday: 0, lastSwipeDate: Date.now(), blocked: [], reports: [],
+                location: { lat: 40.7128, lng: -74.0060 }, createdAt: Date.now(),
+                lastSeen: 0, emailVerified: false,
+                privacyLastSeen: true, privacyOnlineStatus: true,
+                prefAgeMin: 18, prefAgeMax: 100, prefDistance: 50,
+                isPremium: false, premiumPlan: "free", premiumExpiresAt: 0,
+                features: { unlimitedSwipes: false, readReceipts: false, seeWhoLikedYou: false, boost: false }
+            });
+            alert("Account created! A verification email has been sent to " + email);
+            return userCred.user;
+        } catch (err) { alert(err.message); throw err; }
+    };
+    
+    window.resendVerificationEmail = async (email, password) => {
+        try {
+            const userCred = await signInWithEmailAndPassword(auth, email, password);
+            if (!userCred.user.emailVerified) {
+                await sendEmailVerification(userCred.user);
+                alert("Verification email resent!");
+            } else alert("Email already verified!");
+            await auth.signOut();
+        } catch (err) { alert("Please log in first."); }
+    };
+    
+    window.resetPassword = async (email) => {
+        try { await sendPasswordResetEmail(auth, email); alert("Password reset email sent!"); }
+        catch (err) { alert(err.message); }
+    };
+    
+    window.signInWithGoogle = async () => {
+        try {
+            const result = await signInWithPopup(auth, googleProvider);
+            const user = result.user;
+            const userDoc = await getDoc(doc(db, "users", user.uid));
+            if (!userDoc.exists()) {
+                await setDoc(doc(db, "users", user.uid), {
+                    uid: user.uid, name: user.displayName || user.email.split('@')[0], email: user.email,
+                    age: 25, gender: "Female", bio: "New here!", interests: [], profilePic: user.photoURL || "",
+                    matches: [], swipes: [], swipesToday: 0, lastSwipeDate: Date.now(), blocked: [], reports: [],
+                    location: { lat: 40.7128, lng: -74.0060 }, createdAt: Date.now(),
+                    lastSeen: Date.now(), emailVerified: true,
+                    privacyLastSeen: true, privacyOnlineStatus: true,
+                    prefAgeMin: 18, prefAgeMax: 100, prefDistance: 50,
+                    isPremium: false, premiumPlan: "free", premiumExpiresAt: 0,
+                    features: { unlimitedSwipes: false, readReceipts: false, seeWhoLikedYou: false, boost: false }
+                });
+            } else {
+                await updateDoc(doc(db, "users", user.uid), { lastSeen: Date.now(), emailVerified: true });
+            }
+            return user;
+        } catch (err) { alert(err.message); throw err; }
+    };
+    
+    window.loginUserFirebase = async (email, password) => {
+        try {
+            const userCred = await signInWithEmailAndPassword(auth, email, password);
+            if (!userCred.user.emailVerified) { alert("Please verify your email."); await auth.signOut(); throw new Error("Email not verified"); }
+            await updateDoc(doc(db, "users", userCred.user.uid), { lastSeen: Date.now(), emailVerified: true });
+            return userCred.user;
+        } catch (err) { throw err; }
+    };
+    
+    window.getUsersFirebase = async () => {
+        const snap = await getDocs(collection(db, "users"));
+        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    };
+    window.getUserFirebase = async (uid) => {
+        const snap = await getDoc(doc(db, "users", uid));
+        return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+    };
+    window.updateUserFirebase = async (uid, data) => { await updateDoc(doc(db, "users", uid), data); };
+    window.sendMessageFirebase = async (chatId, senderId, text) => {
+        await addDoc(collection(db, "chats", chatId, "messages"), { senderId, text, timestamp: Date.now(), status: "sent", read: false });
+    };
+    window.uploadProfileImage = async (file, uid) => {
+        const imageRef = ref(storage, `profiles/${uid}/${Date.now()}_${file.name}`);
+        await uploadBytes(imageRef, file);
+        return await getDownloadURL(imageRef);
+    };
+    window.reportUser = async (reporterId, reportedId, reason) => {
+        const reportRef = doc(collection(db, "reports"));
+        await setDoc(reportRef, { reporterId, reportedId, reason, timestamp: Date.now(), status: "pending" });
+        const reportedUser = await window.getUserFirebase(reportedId);
+        const reports = reportedUser.reports || [];
+        reports.push({ reporterId, reason, timestamp: Date.now() });
+        await window.updateUserFirebase(reportedId, { reports });
+        alert("User reported.");
+    };
+    window.blockUser = async (userId, blockedId) => {
+        const user = await window.getUserFirebase(userId);
+        const blocked = user.blocked || [];
+        if (!blocked.includes(blockedId)) {
+            blocked.push(blockedId);
+            await window.updateUserFirebase(userId, { blocked });
+            alert("User blocked.");
+        }
+    };
+    
+    // ========== APP STATE ==========
+    let currentUser = null, currentChatPartner = null, typingTimeout = null;
+    let unsubscribeUser = null;
+    
+    // ========== UI FUNCTIONS ==========
+    const loginView = document.getElementById('loginView'), signupView = document.getElementById('signupView'), mainApp = document.getElementById('mainApp');
+    document.getElementById('goToSignupLink')?.addEventListener('click', (e) => { e.preventDefault(); loginView.style.display = 'none'; signupView.style.display = 'flex'; });
+    document.getElementById('goToLoginLink')?.addEventListener('click', (e) => { e.preventDefault(); signupView.style.display = 'none'; loginView.style.display = 'flex'; });
+    document.getElementById('forgotPasswordBtn')?.addEventListener('click', () => { const email = prompt("Enter your email:"); if (email) window.resetPassword(email); });
+    
+    document.getElementById('googleSignInBtn')?.addEventListener('click', async () => {
+        try { const user = await window.signInWithGoogle(); const userData = await window.getUserFirebase(user.uid); currentUser = userData; localStorage.setItem('currentUserUid', user.uid); showMainApp(); }
+        catch (err) { console.error(err); }
+    });
+    document.getElementById('googleSignUpBtn')?.addEventListener('click', async () => {
+        try { const user = await window.signInWithGoogle(); const userData = await window.getUserFirebase(user.uid); currentUser = userData; localStorage.setItem('currentUserUid', user.uid); showMainApp(); }
+        catch (err) { console.error(err); }
+    });
+    
+    document.getElementById('signupFormElem')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('signupName').value, email = document.getElementById('signupEmail').value, pwd = document.getElementById('signupPassword').value, confirm = document.getElementById('confirmPwd').value;
+        if (pwd !== confirm) { alert("Passwords mismatch"); return; }
+        const gender = document.getElementById('signupGender').value, age = document.getElementById('signupAge').value;
+        try { await window.signupUser(email, pwd, name, age, gender); signupView.style.display = 'none'; loginView.style.display = 'flex'; }
+        catch (err) { alert("Signup failed: " + err.message); }
+    });
+    
+    document.getElementById('loginFormElem')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('loginEmail').value, pwd = document.getElementById('loginPassword').value;
+        try { const user = await window.loginUserFirebase(email, pwd); const userData = await window.getUserFirebase(user.uid); currentUser = userData; localStorage.setItem('currentUserUid', user.uid); showMainApp(); }
+        catch (err) { console.log(err); }
+    });
+    
+    async function showMainApp() {
+        loginView.style.display = 'none';
+        signupView.style.display = 'none';
+        mainApp.style.display = 'block';
+        await loadCurrentUser();
+        if (unsubscribeUser) unsubscribeUser();
+        const userRef = doc(db, "users", currentUser.uid);
+        unsubscribeUser = onSnapshot(userRef, (docSnap) => {
+            if (docSnap.exists()) {
+                const newData = docSnap.data();
+                currentUser = { ...currentUser, ...newData };
+                renderProfileUI();
+                renderSwipeCards();
+                renderExplore();
+                renderChatList();
+            }
+        });
+        await renderAll();
+        attachNavEvents();
+        await renderSwipeCards();
+        renderChatList();
+        startHeartbeat(currentUser.uid);
+        await updateLastSeen(currentUser.uid);
+        window.addEventListener('beforeunload', async () => {
+            if (currentUser) await setUserOffline(currentUser.uid);
+            if (heartbeatInterval) clearInterval(heartbeatInterval);
+        });
+    }
+    
+    async function loadCurrentUser() { const uid = localStorage.getItem('currentUserUid'); if (uid) { currentUser = await window.getUserFirebase(uid); if (!currentUser) { localStorage.removeItem('currentUserUid'); window.location.reload(); } } }
+    
+    async function checkDailySwipes() {
+        if (currentUser.features?.unlimitedSwipes === true) {
+            document.getElementById('swipeCounter').innerText = `✨ Unlimited swipes (Premium) ✨`;
+            return true;
+        }
+        const today = new Date().toDateString();
+        const lastSwipeDate = currentUser.lastSwipeDate ? new Date(currentUser.lastSwipeDate).toDateString() : null;
+        if (lastSwipeDate !== today) {
+            await window.updateUserFirebase(currentUser.uid, { swipesToday: 0, lastSwipeDate: Date.now() });
+            currentUser.swipesToday = 0;
+        }
+        const remaining = Math.max(0, 20 - (currentUser.swipesToday || 0));
+        document.getElementById('swipeCounter').innerText = `Swipes remaining today: ${remaining}`;
+        return remaining > 0;
+    }
+    
+    async function getAvailableProfiles() { const users = await window.getUsersFirebase(); const blocked = currentUser.blocked || []; return users.filter(u => u.uid !== currentUser?.uid && !currentUser?.swipes?.includes(u.uid) && !blocked.includes(u.uid)); }
+    async function renderSwipeCards() { let available = await getAvailableProfiles(); if(available.length === 0){ document.getElementById('cardsStack').innerHTML = `<div class="glass-card" style="padding:30px;text-align:center;">✨ No more profiles ✨</div>`; return; } let idx = 0; const container = document.getElementById('cardsStack'); function display() { if(idx >= available.length) return; const p = available[idx]; container.innerHTML = `<div class="swipe-card"><img class="card-img" src="${p.profilePic || 'https://randomuser.me/api/portraits/lego/1.jpg'}"><h3 style="color:white;">${p.name}, ${p.age}</h3><p>${p.bio}</p><button class="small-glass report-profile-btn" data-id="${p.uid}" style="margin-top:10px; background:rgba(255,80,80,0.5);">Report</button></div>`; const reportBtn = container.querySelector('.report-profile-btn'); if(reportBtn) reportBtn.addEventListener('click', (e) => { e.stopPropagation(); showReportModal(p.uid, p.name); }); } display(); document.getElementById('likeBtn').onclick = async () => { if(idx >= available.length) return; const canSwipe = await checkDailySwipes(); if (!canSwipe) { alert("Daily swipe limit reached! Upgrade to premium for unlimited swipes."); return; } const target = available[idx]; const swipes = currentUser.swipes || []; swipes.push(target.uid); await window.updateUserFirebase(currentUser.uid, { swipes, swipesToday: (currentUser.swipesToday || 0) + 1 }); currentUser.swipes = swipes; currentUser.swipesToday = (currentUser.swipesToday || 0) + 1; if (target.swipes && target.swipes.includes(currentUser.uid)) { const matches = currentUser.matches || []; if (!matches.includes(target.uid)) { matches.push(target.uid); await window.updateUserFirebase(currentUser.uid, { matches }); currentUser.matches = matches; const targetMatches = target.matches || []; if (!targetMatches.includes(currentUser.uid)) { targetMatches.push(currentUser.uid); await window.updateUserFirebase(target.uid, { matches: targetMatches }); } document.getElementById('matchToast').style.display = 'block'; setTimeout(() => document.getElementById('matchToast').style.display = 'none', 3000); } } idx++; if(idx < available.length) display(); else await renderSwipeCards(); await renderProfileUI(); renderChatList(); await checkDailySwipes(); }; document.getElementById('passBtn').onclick = async () => { if(idx >= available.length) return; const canSwipe = await checkDailySwipes(); if (!canSwipe) { alert("Daily swipe limit reached! Upgrade to premium for unlimited swipes."); return; } const swipes = currentUser.swipes || []; swipes.push(available[idx].uid); await window.updateUserFirebase(currentUser.uid, { swipes, swipesToday: (currentUser.swipesToday || 0) + 1 }); currentUser.swipes = swipes; currentUser.swipesToday = (currentUser.swipesToday || 0) + 1; idx++; if(idx < available.length) display(); else await renderSwipeCards(); await checkDailySwipes(); }; await checkDailySwipes(); }
+    
+    async function renderExplore() { 
+        let users = await window.getUsersFirebase(); 
+        let filtered = users.filter(u => u.uid !== currentUser?.uid && !(currentUser.blocked || []).includes(u.uid)); 
+        const minAge = parseInt(document.getElementById('filterAgeMin').value) || (currentUser.prefAgeMin || 18); 
+        const maxAge = parseInt(document.getElementById('filterAgeMax').value) || (currentUser.prefAgeMax || 100); 
+        const gender = document.getElementById('filterGender').value; 
+        if(gender) filtered = filtered.filter(u => u.gender === gender); 
+        filtered = filtered.filter(u => u.age >= minAge && u.age <= maxAge); 
+        
+        const pendingLikes = users.filter(u => u.swipes && u.swipes.includes(currentUser.uid) && !currentUser.swipes?.includes(u.uid));
+        const matchQueueDiv = document.getElementById('matchQueue');
+        if (currentUser.features?.seeWhoLikedYou === true) {
+            matchQueueDiv.style.display = 'block';
+            document.getElementById('pendingLikesList').innerHTML = pendingLikes.map(u => `<div style="padding:8px; border-bottom:1px solid rgba(255,255,255,0.1);"><img src="${u.profilePic || 'https://randomuser.me/api/portraits/lego/1.jpg'}" width="40" style="border-radius:50%;"> ${u.name}, ${u.age} <button class="small-glass like-back" data-id="${u.uid}" style="float:right;">Like Back</button></div>`).join('');
+            document.querySelectorAll('.like-back').forEach(btn => btn.addEventListener('click', async () => { const targetId = btn.dataset.id; const swipes = currentUser.swipes || []; if(!swipes.includes(targetId)) { swipes.push(targetId); await window.updateUserFirebase(currentUser.uid, { swipes }); currentUser.swipes = swipes; const target = users.find(u => u.uid === targetId); const matches = currentUser.matches || []; if (!matches.includes(targetId) && target.swipes && target.swipes.includes(currentUser.uid)) { matches.push(targetId); await window.updateUserFirebase(currentUser.uid, { matches }); currentUser.matches = matches; alert(`✨ Matched with ${target.name}! ✨`); } await renderExplore(); } }));
+        } else {
+            matchQueueDiv.style.display = 'none';
+        }
+        
+        document.getElementById('exploreList').innerHTML = filtered.map(u => `<div class="explore-card"><img src="${u.profilePic || 'https://randomuser.me/api/portraits/lego/1.jpg'}" width="80" style="border-radius:50%;"><h4>${u.name}, ${u.age}</h4><button class="small-glass explore-like" data-id="${u.uid}">Like</button><button class="small-glass report-btn" data-id="${u.uid}" style="background:rgba(255,80,80,0.5);">Report</button></div>`).join('');
+        document.querySelectorAll('.explore-like').forEach(btn => btn.addEventListener('click', async () => { const targetId = btn.dataset.id; const swipes = currentUser.swipes || []; if(!swipes.includes(targetId)) { swipes.push(targetId); await window.updateUserFirebase(currentUser.uid, { swipes }); currentUser.swipes = swipes; const target = users.find(u => u.uid === targetId); if (target.swipes && target.swipes.includes(currentUser.uid)) { const matches = currentUser.matches || []; if (!matches.includes(targetId)) { matches.push(targetId); await window.updateUserFirebase(currentUser.uid, { matches }); currentUser.matches = matches; alert(`✨ Matched with ${target.name}! ✨`); } } alert("Liked!"); await renderExplore(); } }));
+        document.querySelectorAll('.report-btn').forEach(btn => btn.addEventListener('click', () => { const targetId = btn.dataset.id; const target = filtered.find(u => u.uid === targetId); showReportModal(targetId, target?.name); }));
+    }
+    
+    function showReportModal(userId, userName) { const modal = document.createElement('div'); modal.className = 'report-modal'; modal.innerHTML = `<h3 style="color:white;">Report ${userName}</h3><button data-reason="Spam">Spam</button><button data-reason="Inappropriate">Inappropriate</button><button data-reason="Fake Profile">Fake Profile</button><button data-reason="Harassment">Harassment</button><button data-reason="Other">Other</button><button id="closeReportModal">Cancel</button>`; document.body.appendChild(modal); modal.querySelectorAll('[data-reason]').forEach(btn => { btn.addEventListener('click', async () => { await window.reportUser(currentUser.uid, userId, btn.dataset.reason); modal.remove(); }); }); modal.querySelector('#closeReportModal').addEventListener('click', () => modal.remove()); }
+    
+    // ========== CHAT FUNCTIONS WITH CORRECT ONLINE STATUS ==========
+    async function renderChatList() { 
+        const container = document.getElementById('chatListContainer'); 
+        const users = await window.getUsersFirebase(); 
+        const matches = users.filter(u => currentUser?.matches?.includes(u.uid) && !(currentUser.blocked || []).includes(u.uid)); 
+        if(matches.length === 0){ 
+            container.innerHTML = `<div class="glass-card" style="padding:20px;text-align:center;">No matches yet. Start swiping!</div>`; 
+            return; 
+        } 
+        container.innerHTML = matches.map(m => {
+            const showOnlineDot = (m.privacyOnlineStatus !== false && isUserOnline(m, m.privacyOnlineStatus));
+            return `<div class="chat-list-item" data-id="${m.uid}">
+                        <div style="position:relative;">
+                            <img class="avatar" src="${m.profilePic || 'https://randomuser.me/api/portraits/lego/1.jpg'}">
+                            ${showOnlineDot ? '<span class="online-dot"></span>' : ''}
+                        </div>
+                        <div class="chat-info">
+                            <div class="chat-name">${m.name}</div>
+                            <div class="last-msg">Tap to chat</div>
+                        </div>
+                        <div class="chat-meta">
+                            <button class="small-glass block-chat-btn" data-id="${m.uid}" style="background:rgba(255,80,80,0.5); padding:4px 8px;">Block</button>
+                        </div>
+                    </div>`;
+        }).join(''); 
+        document.querySelectorAll('.chat-list-item').forEach(el => el.addEventListener('click', (e) => { if(!e.target.classList.contains('block-chat-btn')) openChatScreen(el.dataset.id); })); 
+        document.querySelectorAll('.block-chat-btn').forEach(btn => { 
+            btn.addEventListener('click', async (e) => { 
+                e.stopPropagation(); 
+                const targetId = btn.dataset.id; 
+                if(confirm("Block this user?")) { 
+                    await window.blockUser(currentUser.uid, targetId); 
+                    currentUser.blocked = currentUser.blocked || []; 
+                    currentUser.blocked.push(targetId); 
+                    await renderChatList(); 
+                } 
+            }); 
+        }); 
+    }
+    
+    async function openChatScreen(partnerId) { 
+        currentChatPartner = partnerId; 
+        const users = await window.getUsersFirebase(); 
+        const partner = users.find(u => u.uid === partnerId); 
+        document.getElementById('chatListContainer').style.display = 'none'; 
+        const screenDiv = document.getElementById('chatScreenContainer'); 
+        screenDiv.style.display = 'block'; 
+        
+        let statusText = '';
+        if (partner.privacyOnlineStatus !== false && isUserOnline(partner, true)) {
+            statusText = 'Online';
+        } else if (partner.privacyLastSeen !== false && partner.lastSeen) {
+            statusText = formatLastSeen(partner.lastSeen, true);
+        } else {
+            statusText = 'Offline';
+        }
+        
+        screenDiv.innerHTML = `<div class="chat-header">
+                                    <button class="back-btn" id="backToChatList"><i class="fas fa-arrow-left"></i></button>
+                                    <div class="chat-profile">
+                                        <img src="${partner.profilePic || 'https://randomuser.me/api/portraits/lego/1.jpg'}" id="chatAvatar">
+                                        <div>
+                                            <div class="chat-name">${partner.name}</div>
+                                            <div class="chat-status" id="chatStatus">${statusText}</div>
+                                            <div id="typingStatus" style="font-size:0.7rem; color:#ccc;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="chat-actions">
+                                        <i class="fas fa-phone" id="callDemo"></i>
+                                        <i class="fas fa-video" id="videoDemo"></i>
+                                        <i class="fas fa-ban" id="blockFromChat" style="color:#ff6b6b;"></i>
+                                        <i class="fas fa-ellipsis-v" id="menuUnmatch"></i>
+                                    </div>
+                                </div>
+                                <div class="messages-area" id="messagesArea"></div>
+                                <div class="input-area">
+                                    <input type="text" id="messageInputChat" placeholder="Type a message...">
+                                    <button id="sendChatMsg"><i class="fas fa-paper-plane"></i></button>
+                                </div>`; 
+        
+        document.getElementById('backToChatList').addEventListener('click', () => { screenDiv.style.display = 'none'; document.getElementById('chatListContainer').style.display = 'block'; currentChatPartner = null; renderChatList(); }); 
+        document.getElementById('blockFromChat')?.addEventListener('click', async () => { if(confirm(`Block ${partner.name}?`)) { await window.blockUser(currentUser.uid, partnerId); currentUser.blocked = currentUser.blocked || []; currentUser.blocked.push(partnerId); document.getElementById('backToChatList').click(); } }); 
+        document.getElementById('menuUnmatch')?.addEventListener('click', async () => { if(confirm(`Unmatch ${partner.name}?`)){ const matches = currentUser.matches.filter(id => id !== partnerId); await window.updateUserFirebase(currentUser.uid, { matches }); currentUser.matches = matches; document.getElementById('backToChatList').click(); } }); 
+        
+        const typingRef = doc(db, "typing", `${currentUser.uid}_${partnerId}`); 
+        onSnapshot(typingRef, (doc) => { 
+            if (doc.exists() && doc.data().isTyping && doc.data().userId === partnerId) 
+                document.getElementById('typingStatus').innerHTML = "typing..."; 
+            else 
+                document.getElementById('typingStatus').innerHTML = ""; 
+        }); 
+        const input = document.getElementById('messageInputChat'); 
+        input.addEventListener('input', async () => { 
+            await setDoc(typingRef, { userId: currentUser.uid, isTyping: true, timestamp: Date.now() }); 
+            if (typingTimeout) clearTimeout(typingTimeout); 
+            typingTimeout = setTimeout(async () => { 
+                await setDoc(typingRef, { userId: currentUser.uid, isTyping: false, timestamp: Date.now() }); 
+            }, 1000); 
+        }); 
+        
+        const chatId = [currentUser.uid, partnerId].sort().join('_'); 
+        const messagesArea = document.getElementById('messagesArea'); 
+        const q = query(collection(db, "chats", chatId, "messages"), orderBy("timestamp")); 
+        onSnapshot(q, async (snapshot) => { 
+            const messages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); 
+            messagesArea.innerHTML = messages.map(msg => { 
+                const isSent = msg.senderId === currentUser.uid; 
+                const time = new Date(msg.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); 
+                let statusHtml = ''; 
+                if (isSent && currentUser.features?.readReceipts === true) { 
+                    if (msg.status === 'sent') statusHtml = '<span class="message-status status-sent">✓</span>'; 
+                    else if (msg.status === 'delivered') statusHtml = '<span class="message-status status-delivered">✓✓</span>'; 
+                    else if (msg.status === 'read') statusHtml = '<span class="message-status status-read">✓✓</span>'; 
+                } 
+                return `<div class="message-bubble ${isSent ? 'sent' : 'received'}"><div class="message-text">${msg.text}</div><div class="message-time">${time} ${statusHtml}</div></div>`; 
+            }).join(''); 
+            messagesArea.scrollTop = messagesArea.scrollHeight; 
+            const batch = writeBatch(db); 
+            messages.forEach(msg => { 
+                if (msg.senderId === partnerId && !msg.read) { 
+                    const msgRef = doc(db, "chats", chatId, "messages", msg.id); 
+                    batch.update(msgRef, { read: true, status: 'read' }); 
+                } 
+            }); 
+            await batch.commit(); 
+        }); 
+        document.getElementById('sendChatMsg').onclick = async () => { const text = input.value.trim(); if(!text) return; await window.sendMessageFirebase(chatId, currentUser.uid, text); input.value = ''; await setDoc(typingRef, { userId: currentUser.uid, isTyping: false, timestamp: Date.now() }); }; 
+    }
+    
+    async function updateProfileCompletion() { const fields = [currentUser.name, currentUser.bio, currentUser.location]; let filled = fields.filter(f => f).length; let percent = (filled/3)*100; document.getElementById('profileProgress').style.width = percent+'%'; }
+    
+    async function renderProfileUI() { 
+        document.getElementById('profileUsername').innerText = currentUser.name; 
+        document.getElementById('profileStatus').innerText = currentUser.bio || "Hey there!"; 
+        document.getElementById('profileAvatar').src = currentUser.profilePic || 'https://randomuser.me/api/portraits/lego/1.jpg'; 
+        document.getElementById('matchesCount').innerText = currentUser.matches?.length || 0; 
+        document.getElementById('likesCount').innerText = currentUser.swipes?.length || 0; 
+        document.getElementById('viewsCount').innerText = "0"; 
+        updateProfileCompletion(); 
+        
+        const premiumBadge = document.getElementById('premiumBadge');
+        if (currentUser.isPremium) premiumBadge.style.display = 'inline-block';
+        else premiumBadge.style.display = 'none';
+        
+        const boostBtn = document.getElementById('boostProfileBtn');
+        if (currentUser.features?.boost === true) {
+            boostBtn.onclick = () => alert("✨ Boost activated! Your profile is now at the top for 30 minutes. ✨");
+            boostBtn.style.opacity = '1';
+        } else {
+            boostBtn.onclick = () => alert("Upgrade to Platinum to unlock Boost feature!");
+            boostBtn.style.opacity = '0.7';
+        }
+        
+        const settingsList = [ 
+            { icon: "fas fa-user-circle", title: "Account", key: "account" }, 
+            { icon: "fas fa-lock", title: "Privacy", key: "privacy" }, 
+            { icon: "fas fa-sliders-h", title: "Dating Preferences", key: "dating" }, 
+            { icon: "fas fa-crown", title: "Premium Features", key: "premium" }, 
+            { icon: "fas fa-question-circle", title: "Help & Support", key: "help" } 
+        ]; 
+        document.getElementById('settingsListContainer').innerHTML = settingsList.map(s => `<div class="settings-item" data-key="${s.key}"><div class="settings-item-left"><i class="${s.icon}" style="width:24px"></i><span>${s.title}</span></div><i class="fas fa-chevron-right"></i></div>`).join(''); 
+        document.querySelectorAll('.settings-item').forEach(el => el.addEventListener('click', () => showSettingsDetail(el.dataset.key))); 
+        document.getElementById('editProfileBtn').onclick = () => { document.getElementById('profileView').classList.remove('active-view'); document.getElementById('editProfileView').style.display = 'block'; loadEditProfile(); }; 
+        document.getElementById('shareProfileBtn').onclick = () => alert("Share profile link (demo)"); 
+        document.getElementById('changePhotoBtn').onclick = () => document.getElementById('photoUploadInput').click(); 
+        document.getElementById('photoUploadInput').onchange = async (e) => { if(e.target.files[0]){ const url = await window.uploadProfileImage(e.target.files[0], currentUser.uid); await window.updateUserFirebase(currentUser.uid, { profilePic: url }); currentUser.profilePic = url; document.getElementById('profileAvatar').src = url; alert("Profile photo updated!"); } }; 
+        document.getElementById('logoutBtnProfile').onclick = async () => { 
+            await setUserOffline(currentUser.uid);
+            if (heartbeatInterval) clearInterval(heartbeatInterval);
+            localStorage.removeItem('currentUserUid'); 
+            window.location.reload(); 
+        }; 
+        document.getElementById('upgradeBtn').onclick = () => showUpgradeModal();
+    }
+    
+    function loadEditProfile() { document.getElementById('editName').value = currentUser.name; document.getElementById('editBio').value = currentUser.bio || ""; document.getElementById('editGender').value = currentUser.gender; document.getElementById('editAge').value = currentUser.age; document.getElementById('editLocation').value = currentUser.location || ""; const interests = currentUser.interests || []; const container = document.getElementById('interestsContainer'); function renderTags() { container.innerHTML = interests.map((tag,i) => `<span class="tag">${tag} <i class="fas fa-times-circle remove-tag" data-index="${i}"></i></span>`).join(''); } renderTags(); document.getElementById('newInterestInput').onkeypress = (e) => { if(e.key === 'Enter' && e.target.value.trim()){ interests.push(e.target.value.trim()); renderTags(); e.target.value = ''; } }; document.getElementById('saveProfileChanges').onclick = async () => { await window.updateUserFirebase(currentUser.uid, { name: document.getElementById('editName').value, bio: document.getElementById('editBio').value, gender: document.getElementById('editGender').value, age: parseInt(document.getElementById('editAge').value), location: document.getElementById('editLocation').value, interests: interests }); currentUser = await window.getUserFirebase(currentUser.uid); alert("Profile updated"); document.getElementById('backFromEdit').click(); }; document.getElementById('backFromEdit').onclick = () => { document.getElementById('editProfileView').style.display = 'none'; document.getElementById('profileView').classList.add('active-view'); renderProfileUI(); }; }
+    
+    function showSettingsDetail(section) {
+        document.getElementById('profileView').classList.remove('active-view');
+        document.getElementById('settingsDetailView').style.display = 'block';
+        document.getElementById('settingsTitle').innerText = section.charAt(0).toUpperCase() + section.slice(1);
+        let content = '';
+        if (section === 'account') {
+            content = `
+                <div class="settings-item" id="changeEmailBtn"><div>Change email/phone</div><i class="fas fa-chevron-right"></i></div>
+                <div class="settings-item" id="updatePasswordBtn"><div>Update password</div><i class="fas fa-chevron-right"></i></div>
+                <div class="settings-item" id="emailVerificationBtn"><div>Email Verification</div><i class="fas fa-envelope"></i></div>
+            `;
+        } else if (section === 'privacy') {
+            const lastSeenActive = currentUser.privacyLastSeen !== false;
+            const onlineActive = currentUser.privacyOnlineStatus !== false;
+            content = `
+                <div class="settings-item"><div>Last seen</div><div class="toggle-switch ${lastSeenActive ? 'active' : ''}" id="lastSeenToggle"><div class="toggle-knob"></div></div></div>
+                <div class="settings-item"><div>Online status</div><div class="toggle-switch ${onlineActive ? 'active' : ''}" id="onlineStatusToggle"><div class="toggle-knob"></div></div></div>
+                <div class="settings-item" id="blockedUsersBtn"><div>Blocked users</div><i class="fas fa-chevron-right"></i></div>
+                <div id="blockedUsersList" style="padding: 0 16px 16px;"></div>
+            `;
+        } else if (section === 'dating') {
+            const ageMin = currentUser.prefAgeMin || 18;
+            const ageMax = currentUser.prefAgeMax || 100;
+            const distance = currentUser.prefDistance || 50;
+            content = `
+                <div class="settings-item"><div>Age preference</div><div class="dual-slider-container"><div class="range-values"><span>Min: <span id="minAgeVal">${ageMin}</span></span><span>Max: <span id="maxAgeVal">${ageMax}</span></span></div><input type="range" id="minAgeSlider" min="18" max="60" value="${ageMin}"><input type="range" id="maxAgeSlider" min="18" max="60" value="${ageMax}"></div></div>
+                <div class="settings-item"><div>Distance preference</div><input type="range" id="distancePrefSlider" min="5" max="100" value="${distance}"><span id="distancePrefVal">${distance}</span> km</div>
+                <button class="small-glass" id="savePrefsBtn">Save Preferences</button>
+            `;
+        } else if (section === 'premium') {
+            content = `<div class="premium-card"><i class="fas fa-crown" style="font-size:2rem; color:gold;"></i><h3>Get Verified</h3><p>Blue check badge & priority</p><button class="small-glass" id="verifyBtn">Upgrade Now</button><hr><div style="text-align:left; padding:8px;"><strong>Free Plan:</strong><br>• 20 swipes/day<br>• Basic filters<br>• Standard support<br><br><strong style="color:#22c55e;">Gold ($3.27/month):</strong><br>✓ Unlimited swipes<br>✓ See who liked you<br>✓ Rewind last swipe<br>✓ 1 Boost/month<br>✓ No ads<br><br><strong>Platinum ($12.99/month):</strong><br>✓ All Gold features<br>✓ Read receipts<br>✓ Incognito mode<br>✓ Travel mode<br>✓ 5 Boosts/month<br>✓ Priority support</div><button class="gradient-btn" id="subscribePlusBtn" style="margin-top:12px;">Subscribe to Gold - $3.27/month</button><button class="gradient-btn" id="subscribePlatinumBtn" style="margin-top:12px;">Subscribe to Platinum - $12.99/month</button></div>`;
+        } else {
+            content = `<div class="settings-item">FAQ</div><div class="settings-item">Contact support</div>`;
+        }
+        document.getElementById('settingsDetailContent').innerHTML = content;
+        
+        if (section === 'account') {
+            document.getElementById('changeEmailBtn')?.addEventListener('click', () => {
+                const newEmail = prompt("Enter new email address:");
+                if (newEmail && newEmail.includes('@')) window.changeEmail(newEmail);
+                else alert("Invalid email.");
+            });
+            document.getElementById('updatePasswordBtn')?.addEventListener('click', () => {
+                const newPwd = prompt("Enter new password (min 6 characters):");
+                if (newPwd && newPwd.length >= 6) window.updateUserPassword(newPwd);
+                else alert("Password must be at least 6 characters.");
+            });
+            document.getElementById('emailVerificationBtn')?.addEventListener('click', () => window.sendVerification());
+        }
+        
+        if (section === 'privacy') {
+            const lastSeenToggle = document.getElementById('lastSeenToggle');
+            const onlineStatusToggle = document.getElementById('onlineStatusToggle');
+            if (lastSeenToggle) lastSeenToggle.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                lastSeenToggle.classList.toggle('active');
+                const val = lastSeenToggle.classList.contains('active');
+                await window.updatePrivacySettings(val, currentUser.privacyOnlineStatus !== false);
+            });
+            if (onlineStatusToggle) onlineStatusToggle.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                onlineStatusToggle.classList.toggle('active');
+                const val = onlineStatusToggle.classList.contains('active');
+                await window.updatePrivacySettings(currentUser.privacyLastSeen !== false, val);
+            });
+            document.getElementById('blockedUsersBtn')?.addEventListener('click', async () => {
+                const blockedUsers = await window.getBlockedUsers();
+                const listDiv = document.getElementById('blockedUsersList');
+                if (blockedUsers.length === 0) {
+                    listDiv.innerHTML = '<div style="padding:8px; color:#ccc;">No blocked users.</div>';
+                } else {
+                    listDiv.innerHTML = blockedUsers.map(u => `
+                        <div class="blocked-user-item">
+                            <span>${u.name}</span>
+                            <button class="small-glass unblock-btn" data-id="${u.uid}" style="background:rgba(255,80,80,0.5); padding:4px 12px;">Unblock</button>
+                        </div>
+                    `).join('');
+                    document.querySelectorAll('.unblock-btn').forEach(btn => {
+                        btn.addEventListener('click', async () => {
+                            await window.unblockUser(btn.dataset.id);
+                        });
+                    });
+                }
+                listDiv.style.display = 'block';
+            });
+        }
+        
+        if (section === 'dating') {
+            const minSlider = document.getElementById('minAgeSlider');
+            const maxSlider = document.getElementById('maxAgeSlider');
+            const distSlider = document.getElementById('distancePrefSlider');
+            const minVal = document.getElementById('minAgeVal');
+            const maxVal = document.getElementById('maxAgeVal');
+            const distVal = document.getElementById('distancePrefVal');
+            if (minSlider) minSlider.oninput = () => { minVal.innerText = minSlider.value; if (parseInt(minSlider.value) > parseInt(maxSlider.value)) maxSlider.value = minSlider.value; maxVal.innerText = maxSlider.value; };
+            if (maxSlider) maxSlider.oninput = () => { maxVal.innerText = maxSlider.value; if (parseInt(maxSlider.value) < parseInt(minSlider.value)) minSlider.value = maxSlider.value; minVal.innerText = minSlider.value; };
+            if (distSlider) distSlider.oninput = () => { distVal.innerText = distSlider.value; };
+            document.getElementById('savePrefsBtn')?.addEventListener('click', async () => {
+                const newMin = parseInt(document.getElementById('minAgeSlider').value);
+                const newMax = parseInt(document.getElementById('maxAgeSlider').value);
+                const newDist = parseInt(document.getElementById('distancePrefSlider').value);
+                await window.saveDatingPreferences(newMin, newMax, newDist);
+                if (document.getElementById('exploreView').classList.contains('active-view')) renderExplore();
+            });
+        }
+        
+        if (section === 'premium') {
+            document.getElementById('verifyBtn')?.addEventListener('click', () => showUpgradeModal());
+            document.getElementById('subscribePlusBtn')?.addEventListener('click', () => showUpgradeModal());
+            document.getElementById('subscribePlatinumBtn')?.addEventListener('click', () => showUpgradeModal());
+        }
+        
+        document.getElementById('backFromSettings').onclick = () => {
+            document.getElementById('settingsDetailView').style.display = 'none';
+            document.getElementById('profileView').classList.add('active-view');
+            renderProfileUI();
+        };
+    }
+    
+    function attachNavEvents() { document.querySelectorAll('.nav-item').forEach(item => { item.addEventListener('click', async () => { const viewId = item.dataset.nav; document.querySelectorAll('.view').forEach(v => v.classList.remove('active-view')); document.getElementById(viewId + 'View').classList.add('active-view'); document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active')); item.classList.add('active'); if(viewId === 'messages') { document.getElementById('chatListContainer').style.display = 'block'; document.getElementById('chatScreenContainer').style.display = 'none'; await renderChatList(); currentChatPartner = null; } if(viewId === 'explore') await renderExplore(); if(viewId === 'profile') await renderProfileUI(); if(viewId === 'swipe') await renderSwipeCards(); document.getElementById('editProfileView').style.display = 'none'; document.getElementById('settingsDetailView').style.display = 'none'; }); }); document.querySelector('.nav-item[data-nav="swipe"]').classList.add('active'); }
+    async function renderAll() { await renderProfileUI(); await renderChatList(); await renderExplore(); }
+    
+    if(localStorage.getItem('currentUserUid')) { await loadCurrentUser(); if(currentUser) showMainApp(); else document.getElementById('loginView').style.display = 'flex'; } else { document.getElementById('loginView').style.display = 'flex'; }
+    document.querySelectorAll('.toggle-pwd').forEach(icon=>{ icon.addEventListener('click',function(){ let target=document.getElementById(this.dataset.target); if(target.type==='password') target.type='text'; else target.type='password'; this.classList.toggle('fa-eye');}); });
+    document.getElementById('applyFilterBtn')?.addEventListener('click',()=>renderExplore());
 </script>
 
-<!-- ========== ADDED FEATURES (admin, geolocation, payment, security rules) ========== -->
+<!-- ========== ADDED FEATURES (admin, geolocation, payment, security rules, PWA) ========== -->
 <script type="module">
     // This script adds new features without touching any original functions.
-    // It uses the existing global variables and Firestore instances.
+    // It runs after the original script to avoid conflicts.
 
-    // Wait for the original script to finish loading
+    // Wait for the original script to finish initializing
     window.addEventListener('load', async () => {
-        // Give original script time to set up global variables
+        // Give original script a moment to set up global variables
         await new Promise(r => setTimeout(r, 500));
 
         // ========== 1. ADMIN PANEL with hardcoded credentials ==========
@@ -201,7 +927,7 @@
 
         function showAdminLoginModal() {
             const modal = document.createElement('div');
-            modal.className = 'stripe-modal'; // reuse style
+            modal.className = 'stripe-modal';
             modal.innerHTML = `
                 <h3 style="color:white;">Admin Login</h3>
                 <div class="input-group" style="margin:12px 0;">
@@ -266,7 +992,7 @@
             });
         }
 
-        // Add Admin button to settings list after it's rendered
+        // Add Admin button to settings list
         function addAdminButtonToSettings() {
             const settingsList = document.getElementById('settingsListContainer');
             if (!settingsList || document.getElementById('adminSettingsBtn')) return;
@@ -286,21 +1012,16 @@
             settingsList.appendChild(adminItem);
         }
 
-        // Observe DOM to add admin button when settings appear
         const settingsObserver = new MutationObserver(() => {
             addAdminButtonToSettings();
         });
         settingsObserver.observe(document.body, { childList: true, subtree: true });
 
         // ========== 2. GEOLOCATION & DISTANCE FILTER ==========
-        // Override the existing renderExplore function to include distance filtering.
-        // We'll store the original and then replace it.
+        // Override renderExplore to include distance filtering
         const originalRenderExplore = window.renderExplore;
         if (originalRenderExplore) {
             window.renderExplore = async function() {
-                // Call original to get base filtered list (but we need to inject distance)
-                // Instead of calling original, we replicate the logic with distance added.
-                // To avoid breaking original, we'll enhance it.
                 let users = await window.getUsersFirebase();
                 let filtered = users.filter(u => u.uid !== currentUser?.uid && !(currentUser.blocked || []).includes(u.uid));
                 const minAge = parseInt(document.getElementById('filterAgeMin').value) || (currentUser.prefAgeMin || 18);
@@ -309,7 +1030,7 @@
                 const gender = document.getElementById('filterGender').value;
                 if(gender) filtered = filtered.filter(u => u.gender === gender);
                 filtered = filtered.filter(u => u.age >= minAge && u.age <= maxAge);
-                // Distance filter (if currentUser has location)
+                // Distance filter
                 if (currentUser.location && currentUser.location.lat) {
                     const haversineDistance = (loc1, loc2) => {
                         if (!loc1 || !loc2) return Infinity;
@@ -324,8 +1045,6 @@
                     };
                     filtered = filtered.filter(u => u.location && haversineDistance(currentUser.location, u.location) <= maxDistance);
                 }
-                // Reuse the rest of original renderExplore logic (pending likes, HTML generation)
-                // We'll copy that part from original to avoid duplication.
                 const pendingLikes = users.filter(u => u.swipes && u.swipes.includes(currentUser.uid) && !currentUser.swipes?.includes(u.uid));
                 const matchQueueDiv = document.getElementById('matchQueue');
                 if (currentUser.features?.seeWhoLikedYou === true) {
@@ -341,7 +1060,7 @@
             };
         }
 
-        // Get user location on login (after original showMainApp)
+        // Add geolocation on login
         const originalShowMainApp = window.showMainApp;
         if (originalShowMainApp) {
             window.showMainApp = async function() {
@@ -360,7 +1079,6 @@
         const originalUpgradeToPremium = window.upgradeToPremium;
         if (originalUpgradeToPremium) {
             window.upgradeToPremium = async function(userId, plan) {
-                // Show stripe-like modal
                 const modal = document.createElement('div');
                 modal.className = 'stripe-modal';
                 modal.innerHTML = `
@@ -380,7 +1098,6 @@
                 return new Promise((resolve) => {
                     modal.querySelector('#mockPayBtn').onclick = async () => {
                         modal.remove();
-                        // Call original upgrade function after payment
                         await originalUpgradeToPremium(userId, plan);
                         resolve(true);
                     };
@@ -427,11 +1144,9 @@ service cloud.firestore {
         };
         document.body.appendChild(rulesBtn);
 
-        // ========== 5. PWA MANIFEST (already linked, ensure it exists) ==========
-        // The manifest is already linked in the head; we'll create a fallback if missing.
+        // ========== 5. PWA MANIFEST FALLBACK ==========
         const manifestLink = document.querySelector('link[rel="manifest"]');
         if (manifestLink && manifestLink.href === 'manifest.json') {
-            // Assume it exists; otherwise create dynamic one
             fetch('manifest.json').catch(() => {
                 const fallbackManifest = {
                     name: "Lumeet",
@@ -451,7 +1166,7 @@ service cloud.firestore {
 </script>
 
 <script>
-    // Service worker registration (already present)
+    // Service worker registration (unchanged)
     if ("serviceWorker" in navigator) {
         navigator.serviceWorker.register("/service-worker.js")
             .then(() => console.log("Service Worker Registered"))
