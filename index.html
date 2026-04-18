@@ -144,6 +144,16 @@
         .event-card { background: rgba(255,255,255,0.1); border-radius: 24px; padding: 12px; margin: 8px 0; cursor: pointer; }
         .quality-match { background: rgba(255,215,0,0.15); border: 1px solid gold; }
         .intro-video { max-width: 100%; border-radius: 16px; margin-top: 8px; }
+        /* Custom modal for all popups (alert/confirm/prompt) */
+        .custom-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 10000; }
+        .custom-modal-content { background: rgba(30,30,40,0.95); backdrop-filter: blur(20px); border-radius: 32px; padding: 24px; min-width: 280px; max-width: 90%; text-align: center; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        .custom-modal-content h3 { color: white; margin-bottom: 12px; font-size: 1.2rem; }
+        .custom-modal-content p { color: #ddd; margin-bottom: 20px; }
+        .custom-modal-content input { width: 100%; padding: 12px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); border-radius: 40px; color: white; margin-bottom: 16px; outline: none; }
+        .custom-modal-buttons { display: flex; gap: 12px; justify-content: center; }
+        .custom-modal-buttons button { padding: 10px 20px; border-radius: 40px; border: none; cursor: pointer; font-weight: 600; }
+        .custom-modal-buttons .confirm-btn { background: #22c55e; color: white; }
+        .custom-modal-buttons .cancel-btn { background: rgba(255,255,255,0.2); color: white; }
     </style>
 </head>
 <body>
@@ -162,13 +172,77 @@
     <div id="swipeView" class="view"><h2 style="color:white; text-align:center;">Swipe</h2><div id="swipeCounter" class="swipe-counter">Swipes remaining: 20</div><div id="visibilityScore" class="visibility-score" style="margin:8px auto;">Profile seen by 0 today</div><div id="cardsStack" class="cards-container"></div><div class="action-buttons"><div class="action-circle pass-btn" id="passBtn"><i class="fas fa-times fa-2x"></i></div><div class="action-circle like-btn" id="likeBtn"><i class="fas fa-heart fa-2x"></i></div></div><div id="matchToast" style="position:fixed; bottom:30%; left:10%; right:10%; background:gold; border-radius:50px; text-align:center; padding:12px; display:none; z-index:200;">✨ It's a match! ✨</div></div>
     <div id="exploreView" class="view"><h2 style="color:white;">Discover</h2><div style="display:flex; gap:8px; flex-wrap:wrap;"><input type="number" id="filterAgeMin" placeholder="Min age" style="background:rgba(255,255,255,0.2); border-radius:40px; padding:8px; width:80px;"><input type="number" id="filterAgeMax" placeholder="Max age" style="background:rgba(255,255,255,0.2); border-radius:40px; padding:8px; width:80px;"><input type="number" id="filterDistance" placeholder="Distance (km)" style="background:rgba(255,255,255,0.2); border-radius:40px; padding:8px; width:100px;"><select id="filterIntent" style="background:rgba(255,255,255,0.2); border-radius:40px;"><option value="">Intent (any)</option><option>Serious</option><option>Casual</option><option>Friends</option></select><select id="filterGender" style="background:rgba(255,255,255,0.2); border-radius:40px;"><option value="">Any gender</option><option>Female</option><option>Male</option></select><button id="applyFilterBtn" class="small-glass">Filter</button></div><div id="matchQueue" style="background:rgba(0,0,0,0.3); border-radius:28px; padding:12px; margin-top:12px;"><h3 style="color:white;">People who liked you (last 5)</h3><div id="pendingLikesList"></div></div><div id="exploreList" class="explore-grid"></div></div>
     <div id="messagesView" class="view"><div id="chatListContainer" class="chat-list-container"></div><div id="chatScreenContainer" class="chat-screen-container" style="display:none;"></div></div>
-    <div id="profileView" class="view"><div class="glass-card" style="padding:20px;"><div style="text-align:right;"><i class="fas fa-cog" id="openSettingsBtn" style="font-size:1.5rem; color:white; cursor:pointer;"></i></div><div class="profile-top"><div style="position:relative; display:inline-block;"><img id="profileAvatar" class="profile-pic-large" src=""><div class="camera-overlay" id="changePhotoBtn"><i class="fas fa-camera"></i></div><input type="file" id="photoUploadInput" style="display:none;" accept="image/*"></div><h2 style="color:white; margin-top:8px;"><span id="profileUsername"></span><i class="fas fa-check-circle verified-badge" style="display:none;"></i></h2><p id="profileStatus" style="color:#ccc;"></p><div class="last-seen-preview" id="lastSeenPreview"></div><div class="progress-bar"><div class="progress-fill" id="profileProgress"></div></div><div class="stats-row"><div><strong id="matchesCount">0</strong><br>Matches</div><div><strong id="likesCount">0</strong><br>Likes</div><div><strong id="viewsCount">0</strong><br>Views</div></div><div class="action-buttons-row"><button id="editProfileBtn"><i class="fas fa-edit"></i> Edit Profile</button><button id="shareProfileBtn"><i class="fas fa-share-alt"></i> Share</button><button id="boostProfileBtn"><i class="fas fa-rocket"></i> Boost</button><button id="upgradeBtn" class="gradient-btn" style="background: linear-gradient(135deg, #ffd700, #ffb347);">Upgrade</button><button id="verifyIdentityBtn" class="small-glass" style="background:#22c55e;">Verify ID</button><button id="adminDirectBtn" class="small-glass" style="background:#ff4d6d;">Admin</button><button id="eventsBtn" class="small-glass">📅 Events</button></div></div><div class="settings-list" id="settingsListContainer"></div><button id="logoutBtnProfile" style="background:rgba(255,80,80,0.5); border:none; border-radius:60px; padding:12px; width:100%; margin-top:20px; color:white;">Logout</button></div></div>
+    <div id="profileView" class="view"><div class="glass-card" style="padding:20px;"><div style="text-align:right;"><i class="fas fa-cog" id="openSettingsBtn" style="font-size:1.5rem; color:white; cursor:pointer;"></i></div><div class="profile-top"><div style="position:relative; display:inline-block;"><img id="profileAvatar" class="profile-pic-large" src=""><div class="camera-overlay" id="changePhotoBtn"><i class="fas fa-camera"></i></div><input type="file" id="photoUploadInput" style="display:none;" accept="image/*"></div><h2 style="color:white; margin-top:8px;"><span id="profileUsername"></span><i class="fas fa-check-circle verified-badge" style="display:none;"></i></h2><p id="profileStatus" style="color:#ccc;"></p><div class="last-seen-preview" id="lastSeenPreview"></div><div class="progress-bar"><div class="progress-fill" id="profileProgress"></div></div><div class="stats-row"><div><strong id="matchesCount">0</strong><br>Matches</div><div><strong id="likesCount">0</strong><br>Likes</div><div><strong id="viewsCount">0</strong><br>Views</div></div><div class="action-buttons-row"><button id="editProfileBtn"><i class="fas fa-edit"></i> Edit Profile</button><button id="shareProfileBtn"><i class="fas fa-share-alt"></i> Share</button><button id="boostProfileBtn"><i class="fas fa-rocket"></i> Boost</button></div></div><div class="settings-list" id="settingsListContainer"></div><button id="logoutBtnProfile" style="background:rgba(255,80,80,0.5); border:none; border-radius:60px; padding:12px; width:100%; margin-top:20px; color:white;">Logout</button></div></div>
     <div id="editProfileView" class="view" style="display:none;"><div class="glass-card" style="padding:20px;"><div class="back-header"><button id="backFromEdit"><i class="fas fa-arrow-left"></i></button><h2 style="color:white;">Edit Profile</h2></div><div class="edit-profile-form"><div class="photo-grid" id="photoGrid"></div><input type="text" id="editName" placeholder="Name"><textarea id="editBio" rows="2" placeholder="Bio"></textarea><select id="editGender"><option>Female</option><option>Male</option></select><input type="number" id="editAge" placeholder="Age"><input type="text" id="editLocation" placeholder="Location"><label style="color:white;">Interests (add tags):</label><div class="interests-tag-input" id="interestsContainer"></div><input type="text" id="newInterestInput" placeholder="Type interest and press Enter" style="margin-top:4px;"><label style="color:white;">Looking for:</label><select id="editIntent"><option>Serious</option><option>Casual</option><option>Friends</option></select><label style="color:white;">Video/voice intro:</label><input type="file" id="introUploadInput" accept="video/*,audio/*"><button id="uploadIntroBtn" class="small-glass">Upload intro</button><div id="introPreview"></div><button id="saveProfileChanges" class="gradient-btn" style="margin-top:16px;">Save Changes</button></div></div></div>
     <div id="settingsDetailView" class="view" style="display:none;"><div class="glass-card" style="padding:20px;"><div class="back-header"><button id="backFromSettings"><i class="fas fa-arrow-left"></i></button><h2 id="settingsTitle" style="color:white;">Settings</h2></div><div id="settingsDetailContent"></div></div></div>
     <div class="bottom-nav"><div class="nav-item" data-nav="swipe"><i class="fas fa-fire"></i><span>Swipe</span></div><div class="nav-item" data-nav="explore"><i class="fas fa-compass"></i><span>Explore</span></div><div class="nav-item" data-nav="messages"><i class="fas fa-comment-dots"></i><span>Chats</span></div><div class="nav-item" data-nav="profile"><i class="fas fa-user"></i><span>Profile</span></div></div>
 </div>
 
 <script type="module">
+    // ========== CUSTOM MODAL SYSTEM (replaces alert/confirm/prompt) ==========
+    window.customAlert = (message, title = "Notice") => {
+        return new Promise((resolve) => {
+            const modal = document.createElement('div');
+            modal.className = 'custom-modal';
+            modal.innerHTML = `
+                <div class="custom-modal-content">
+                    <h3>${title}</h3>
+                    <p>${message}</p>
+                    <div class="custom-modal-buttons">
+                        <button class="confirm-btn">OK</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.querySelector('.confirm-btn').onclick = () => { modal.remove(); resolve(); };
+        });
+    };
+    window.customConfirm = (message, title = "Confirm") => {
+        return new Promise((resolve) => {
+            const modal = document.createElement('div');
+            modal.className = 'custom-modal';
+            modal.innerHTML = `
+                <div class="custom-modal-content">
+                    <h3>${title}</h3>
+                    <p>${message}</p>
+                    <div class="custom-modal-buttons">
+                        <button class="confirm-btn">Yes</button>
+                        <button class="cancel-btn">No</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.querySelector('.confirm-btn').onclick = () => { modal.remove(); resolve(true); };
+            modal.querySelector('.cancel-btn').onclick = () => { modal.remove(); resolve(false); };
+        });
+    };
+    window.customPrompt = (message, defaultValue = "", title = "Input") => {
+        return new Promise((resolve) => {
+            const modal = document.createElement('div');
+            modal.className = 'custom-modal';
+            modal.innerHTML = `
+                <div class="custom-modal-content">
+                    <h3>${title}</h3>
+                    <p>${message}</p>
+                    <input type="text" id="customPromptInput" value="${defaultValue.replace(/"/g, '&quot;')}" placeholder="Enter value...">
+                    <div class="custom-modal-buttons">
+                        <button class="confirm-btn">OK</button>
+                        <button class="cancel-btn">Cancel</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            const input = modal.querySelector('#customPromptInput');
+            modal.querySelector('.confirm-btn').onclick = () => { const val = input.value; modal.remove(); resolve(val); };
+            modal.querySelector('.cancel-btn').onclick = () => { modal.remove(); resolve(null); };
+            input.focus();
+        });
+    };
+    // Override global alert/confirm/prompt (but keep original for fallback)
+    window.alert = window.customAlert;
+    window.confirm = window.customConfirm;
+    window.prompt = window.customPrompt;
+
     // ========== FIREBASE INIT ==========
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup, sendEmailVerification, updateEmail, updatePassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -216,9 +290,9 @@
                 features: { unlimitedSwipes: false, readReceipts: false, seeWhoLikedYou: false, boost: false },
                 verified: false, intent: "Serious", introUrl: "", banned: false
             });
-            alert("Account created! Verification email sent.");
+            await customAlert("Account created! Verification email sent.", "Success");
             return userCred.user;
-        } catch (err) { alert(err.message); throw err; }
+        } catch (err) { await customAlert(err.message, "Signup Error"); throw err; }
     };
     window.signInWithGoogle = async () => {
         try {
@@ -242,12 +316,12 @@
                 await updateDoc(doc(db, "users", user.uid), { lastSeen: Date.now(), emailVerified: true });
             }
             return user;
-        } catch (err) { alert(err.message); throw err; }
+        } catch (err) { await customAlert(err.message, "Google Sign-In Error"); throw err; }
     };
     window.loginUserFirebase = async (email, password) => {
         try {
             const userCred = await signInWithEmailAndPassword(auth, email, password);
-            if (!userCred.user.emailVerified) { alert("Please verify your email."); await signOut(auth); throw new Error("Email not verified"); }
+            if (!userCred.user.emailVerified) { await customAlert("Please verify your email.", "Email Not Verified"); await signOut(auth); throw new Error("Email not verified"); }
             await updateDoc(doc(db, "users", userCred.user.uid), { lastSeen: Date.now(), emailVerified: true });
             return userCred.user;
         } catch (err) { throw err; }
@@ -270,17 +344,22 @@
             loadEvents();
         }));
         modal.querySelector('#createEventBtn').onclick = () => {
-            const title = prompt("Event title:"), location = prompt("Location:"), date = prompt("Date (YYYY-MM-DD HH:MM):");
-            if (title && location && date) addDoc(collection(db, "events"), { title, location, date: new Date(date).getTime(), creator: currentUser.uid, attendees: [currentUser.uid], createdAt: Date.now() }).then(() => loadEvents());
+            customPrompt("Event title:", "", "Create Event").then(title => {
+                if(title) customPrompt("Location:", "", "Location").then(location => {
+                    if(location) customPrompt("Date (YYYY-MM-DD HH:MM):", "", "Date").then(date => {
+                        if(date) addDoc(collection(db, "events"), { title, location, date: new Date(date).getTime(), creator: currentUser.uid, attendees: [currentUser.uid], createdAt: Date.now() }).then(() => loadEvents());
+                    });
+                });
+            });
         };
         modal.querySelector('#closeEventsModal').onclick = () => modal.remove();
     }
     async function uploadIntro(file) {
         const introRef = ref(storage, `intros/${currentUser.uid}/${Date.now()}_${file.name}`);
         await uploadBytes(introRef, file); const url = await getDownloadURL(introRef);
-        await updateDoc(doc(db, "users", currentUser.uid), { introUrl: url }); alert("Intro uploaded!");
+        await updateDoc(doc(db, "users", currentUser.uid), { introUrl: url }); await customAlert("Intro uploaded!", "Success");
     }
-    async function submitAppeal(reason) { await addDoc(collection(db, "appeals"), { userId: currentUser.uid, reason, status: "pending", timestamp: Date.now() }); alert("Appeal submitted."); }
+    async function submitAppeal(reason) { await addDoc(collection(db, "appeals"), { userId: currentUser.uid, reason, status: "pending", timestamp: Date.now() }); await customAlert("Appeal submitted.", "Appeal"); }
     let isAdminLoggedIn = false;
     async function renderAdminPanel() {
         if (!isAdminLoggedIn) return;
@@ -296,7 +375,6 @@
         })();
         adminDiv.innerHTML = `<h3>👑 Admin Panel</h3><div class="admin-stats" id="adminStats"></div><div class="admin-section"><h4>🚫 Banned Users</h4><div id="bannedList"></div></div><div class="admin-section"><h4>📢 Appeals</h4><div id="appealsList"></div></div><div class="admin-section"><h4>⚠️ Reports</h4><div id="reportsList"></div></div><button class="small-glass" id="adminLogoutBtn">Logout</button>`;
         
-        // Real-time users
         const usersQuery = query(collection(db, "users"));
         const unsubUsers = onSnapshot(usersQuery, (snap) => {
             const users = snap.docs.map(d => d.data());
@@ -308,7 +386,6 @@
         });
         adminUnsubscribes.push(unsubUsers);
         
-        // Real-time appeals
         const appealsQuery = query(collection(db, "appeals"), orderBy("timestamp", "desc"));
         const unsubAppeals = onSnapshot(appealsQuery, (snap) => {
             const appeals = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -318,7 +395,6 @@
         });
         adminUnsubscribes.push(unsubAppeals);
         
-        // Real-time reports
         const reportsQuery = query(collection(db, "reports"), orderBy("timestamp", "desc"));
         const unsubReports = onSnapshot(reportsQuery, (snap) => {
             const reports = snap.docs.map(d => d.data());
@@ -373,7 +449,7 @@
                     }
                     document.getElementById('matchToast').style.display = 'block';
                     setTimeout(() => document.getElementById('matchToast').style.display = 'none', 3000);
-                    showNotification(`🎉 New match with ${target.name}!`);
+                    customAlert(`🎉 New match with ${target.name}!`, "Match!");
                 }
             }
             idx++;
@@ -434,8 +510,7 @@
                             matches.push(targetId);
                             await updateDoc(doc(db, "users", currentUser.uid), { matches });
                             currentUser.matches = matches;
-                            alert(`✨ Matched with ${target.name}! ✨`);
-                            showNotification(`🎉 New match with ${target.name}!`);
+                            await customAlert(`✨ Matched with ${target.name}! ✨`, "Match!");
                         }
                     }
                     renderExplore();
@@ -452,7 +527,7 @@
                 swipes.push(targetId);
                 await updateDoc(doc(db, "users", currentUser.uid), { swipes });
                 currentUser.swipes = swipes;
-                alert("Liked!");
+                await customAlert("Liked!", "Success");
                 renderExplore();
             }
         }));
@@ -469,7 +544,7 @@
         modal.querySelectorAll('[data-reason]').forEach(btn => btn.addEventListener('click', async () => {
             await addDoc(collection(db, "reports"), { reporterId: currentUser.uid, reportedId: userId, reason: btn.dataset.reason, timestamp: Date.now() });
             modal.remove();
-            alert("Reported.");
+            await customAlert("Reported.", "Report");
         }));
         modal.querySelector('#closeReportModal').onclick = () => modal.remove();
     }
@@ -490,7 +565,8 @@
         document.querySelectorAll('.block-chat-btn').forEach(btn => btn.addEventListener('click', async (e) => {
             e.stopPropagation();
             const targetId = btn.dataset.id;
-            if(confirm("Block this user?")) {
+            const confirm = await customConfirm(`Block ${users.find(u=>u.uid===targetId)?.name}?`, "Block User");
+            if(confirm) {
                 const blocked = currentUser.blocked || [];
                 blocked.push(targetId);
                 await updateDoc(doc(db, "users", currentUser.uid), { blocked });
@@ -500,7 +576,7 @@
         }));
     }
     async function openChatScreen(partnerId) {
-        if(currentUser.verified !== true) { alert("You must verify your identity before chatting."); return; }
+        if(currentUser.verified !== true) { await customAlert("You must verify your identity before chatting.", "Verification Required"); return; }
         currentChatPartner = partnerId;
         const users = (await getDocs(collection(db, "users"))).docs.map(d => d.data());
         const partner = users.find(u => u.uid === partnerId);
@@ -518,7 +594,8 @@
         `;
         document.getElementById('backToChatList').onclick = () => { screenDiv.style.display = 'none'; document.getElementById('chatListContainer').style.display = 'block'; if(unsubscribeMessages) unsubscribeMessages(); renderChatList(); };
         document.getElementById('blockFromChat')?.addEventListener('click', async () => {
-            if(confirm(`Block ${partner.name}?`)) {
+            const confirm = await customConfirm(`Block ${partner.name}?`, "Block User");
+            if(confirm) {
                 const blocked = currentUser.blocked || [];
                 blocked.push(partnerId);
                 await updateDoc(doc(db, "users", currentUser.uid), { blocked });
@@ -527,7 +604,8 @@
             }
         });
         document.getElementById('menuUnmatch')?.addEventListener('click', async () => {
-            if(confirm(`Unmatch ${partner.name}?`)) {
+            const confirm = await customConfirm(`Unmatch ${partner.name}?`, "Unmatch");
+            if(confirm) {
                 const matches = currentUser.matches.filter(id => id !== partnerId);
                 await updateDoc(doc(db, "users", currentUser.uid), { matches });
                 currentUser.matches = matches;
@@ -593,21 +671,35 @@
         updateProfileCompletion();
         if(currentUser.verified) document.querySelector('.verified-badge').style.display = 'inline-block';
         else document.querySelector('.verified-badge').style.display = 'none';
-        // No premium badge text – only verified tick
         const boostBtn = document.getElementById('boostProfileBtn');
-        if(currentUser.features?.boost === true) boostBtn.onclick = () => alert("Boost activated!");
-        else boostBtn.onclick = () => alert("Upgrade to Platinum to unlock Boost.");
+        if(currentUser.features?.boost === true) boostBtn.onclick = async () => await customAlert("Boost activated! Your profile is now at the top for 30 minutes.", "Boost");
+        else boostBtn.onclick = async () => await customAlert("Upgrade to Platinum to unlock Boost feature.", "Premium Required");
+        
         const settingsList = [
             { icon: "fas fa-user-circle", title: "Account", key: "account" },
             { icon: "fas fa-lock", title: "Privacy", key: "privacy" },
             { icon: "fas fa-sliders-h", title: "Dating Preferences", key: "dating" },
             { icon: "fas fa-crown", title: "Premium Features", key: "premium" },
-            { icon: "fas fa-question-circle", title: "Help & Support", key: "help" }
+            { icon: "fas fa-question-circle", title: "Help & Support", key: "help" },
+            { icon: "fas fa-gem", title: "Upgrade to Premium", key: "upgrade" },
+            { icon: "fas fa-id-card", title: "Verify Identity", key: "verify" },
+            { icon: "fas fa-shield-alt", title: "Admin Panel", key: "admin" },
+            { icon: "fas fa-calendar-alt", title: "Events", key: "events" },
+            { icon: "fas fa-gavel", title: "Appeal Ban", key: "appeal" }
         ];
         document.getElementById('settingsListContainer').innerHTML = settingsList.map(s => `<div class="settings-item" data-key="${s.key}"><div class="settings-item-left"><i class="${s.icon}"></i><span>${s.title}</span></div><i class="fas fa-chevron-right"></i></div>`).join('');
-        document.querySelectorAll('.settings-item').forEach(el => el.addEventListener('click', () => showSettingsDetail(el.dataset.key)));
+        document.querySelectorAll('.settings-item').forEach(el => el.addEventListener('click', () => {
+            const key = el.dataset.key;
+            if(key === 'upgrade') showUpgradeModal();
+            else if(key === 'verify') verifyIdentity();
+            else if(key === 'admin') showAdminLogin();
+            else if(key === 'events') loadEvents();
+            else if(key === 'appeal') submitAppealPrompt();
+            else showSettingsDetail(key);
+        }));
+        
         document.getElementById('editProfileBtn').onclick = () => { document.getElementById('profileView').classList.remove('active-view'); document.getElementById('editProfileView').style.display = 'block'; loadEditProfile(); };
-        document.getElementById('shareProfileBtn').onclick = () => alert("Share profile link (demo)");
+        document.getElementById('shareProfileBtn').onclick = async () => await customAlert("Share profile link (demo)", "Share");
         document.getElementById('changePhotoBtn').onclick = () => document.getElementById('photoUploadInput').click();
         document.getElementById('photoUploadInput').onchange = async (e) => {
             if(e.target.files[0]){
@@ -618,7 +710,7 @@
                 await updateDoc(doc(db, "users", currentUser.uid), { profilePic: url });
                 currentUser.profilePic = url;
                 document.getElementById('profileAvatar').src = url;
-                alert("Photo updated!");
+                await customAlert("Photo updated!", "Success");
             }
         };
         document.getElementById('logoutBtnProfile').onclick = async () => {
@@ -626,7 +718,20 @@
             localStorage.removeItem('currentUserUid');
             window.location.reload();
         };
-        document.getElementById('upgradeBtn').onclick = () => showUpgradeModal();
+    }
+    async function verifyIdentity() {
+        await updateDoc(doc(db, "users", currentUser.uid), { verified: true });
+        await customAlert("Identity verified! You can now chat.", "Verified");
+        renderProfileUI();
+    }
+    async function showAdminLogin() {
+        const pwd = await customPrompt("Admin password:", "", "Admin Login");
+        if(pwd === 'Crains'){ isAdminLoggedIn = true; renderAdminPanel(); }
+        else await customAlert("Wrong password", "Error");
+    }
+    async function submitAppealPrompt() {
+        const reason = await customPrompt("Why should we unban you?", "", "Appeal");
+        if(reason) await submitAppeal(reason);
     }
     function loadEditProfile() {
         document.getElementById('editName').value = currentUser.name;
@@ -650,7 +755,7 @@
                 intent: document.getElementById('editIntent').value
             });
             currentUser = (await getDoc(doc(db, "users", currentUser.uid))).data();
-            alert("Profile updated");
+            await customAlert("Profile updated", "Success");
             document.getElementById('backFromEdit').click();
         };
         document.getElementById('backFromEdit').onclick = () => { document.getElementById('editProfileView').style.display = 'none'; document.getElementById('profileView').classList.add('active-view'); renderProfileUI(); };
@@ -663,13 +768,13 @@
         if(section === 'account') content = `<div class="settings-item" id="changeEmailBtn"><div>Change email/phone</div><i class="fas fa-chevron-right"></i></div><div class="settings-item" id="updatePasswordBtn"><div>Update password</div><i class="fas fa-chevron-right"></i></div><div class="settings-item" id="emailVerificationBtn"><div>Email Verification</div><i class="fas fa-envelope"></i></div>`;
         else if(section === 'privacy') content = `<div class="settings-item"><div>Last seen</div><div class="toggle-switch ${currentUser.privacyLastSeen !== false ? 'active' : ''}" id="lastSeenToggle"><div class="toggle-knob"></div></div></div><div class="settings-item"><div>Online status</div><div class="toggle-switch ${currentUser.privacyOnlineStatus !== false ? 'active' : ''}" id="onlineStatusToggle"><div class="toggle-knob"></div></div></div><div class="settings-item" id="blockedUsersBtn"><div>Blocked users</div><i class="fas fa-chevron-right"></i></div><div id="blockedUsersList"></div>`;
         else if(section === 'dating') content = `<div class="settings-item"><div>Age preference</div><div class="dual-slider-container"><div class="range-values"><span>Min: <span id="minAgeVal">${currentUser.prefAgeMin||18}</span></span><span>Max: <span id="maxAgeVal">${currentUser.prefAgeMax||100}</span></span></div><input type="range" id="minAgeSlider" min="18" max="60" value="${currentUser.prefAgeMin||18}"><input type="range" id="maxAgeSlider" min="18" max="60" value="${currentUser.prefAgeMax||100}"></div></div><div class="settings-item"><div>Distance preference</div><input type="range" id="distancePrefSlider" min="5" max="100" value="${currentUser.prefDistance||50}"><span id="distancePrefVal">${currentUser.prefDistance||50}</span> km</div><button class="small-glass" id="savePrefsBtn">Save Preferences</button>`;
-        else if(section === 'premium') content = `<div class="premium-card"><i class="fas fa-crown"></i><h3>Get Verified</h3><p>Blue check badge & priority</p><button class="small-glass" id="verifyBtn">Upgrade Now</button><hr><div><strong>Gold ($3.27/month)</strong><br>✓ Unlimited swipes<br>✓ See who liked you<br><br><strong>Platinum ($12.99/month)</strong><br>✓ All Gold<br>✓ Read receipts<br>✓ Profile boost</div><button class="gradient-btn" id="subscribeGoldBtn">Subscribe to Gold</button><button class="gradient-btn" id="subscribePlatinumBtn">Subscribe to Platinum</button></div>`;
+        else if(section === 'premium') content = `<div class="premium-card"><i class="fas fa-crown"></i><h3>Premium Features</h3><div><strong>Gold ($3.27/month)</strong><br>✓ Unlimited swipes<br>✓ See who liked you<br><br><strong>Platinum ($12.99/month)</strong><br>✓ All Gold<br>✓ Read receipts<br>✓ Profile boost</div><button class="gradient-btn" id="subscribeGoldBtn">Subscribe to Gold</button><button class="gradient-btn" id="subscribePlatinumBtn">Subscribe to Platinum</button></div>`;
         else content = `<div class="settings-item">FAQ</div><div class="settings-item">Contact support</div>`;
         document.getElementById('settingsDetailContent').innerHTML = content;
         if(section === 'account') {
-            document.getElementById('changeEmailBtn')?.addEventListener('click', () => { const newEmail = prompt("New email:"); if(newEmail) updateEmail(auth.currentUser, newEmail).then(()=>alert("Email updated")).catch(err=>alert(err.message)); });
-            document.getElementById('updatePasswordBtn')?.addEventListener('click', () => { const newPwd = prompt("New password:"); if(newPwd) updatePassword(auth.currentUser, newPwd).then(()=>alert("Password updated")).catch(err=>alert(err.message)); });
-            document.getElementById('emailVerificationBtn')?.addEventListener('click', () => sendEmailVerification(auth.currentUser).then(()=>alert("Verification email sent")));
+            document.getElementById('changeEmailBtn')?.addEventListener('click', async () => { const newEmail = await customPrompt("New email:", "", "Change Email"); if(newEmail) updateEmail(auth.currentUser, newEmail).then(()=>customAlert("Email updated", "Success")).catch(err=>customAlert(err.message, "Error")); });
+            document.getElementById('updatePasswordBtn')?.addEventListener('click', async () => { const newPwd = await customPrompt("New password:", "", "Change Password"); if(newPwd) updatePassword(auth.currentUser, newPwd).then(()=>customAlert("Password updated", "Success")).catch(err=>customAlert(err.message, "Error")); });
+            document.getElementById('emailVerificationBtn')?.addEventListener('click', async () => { sendEmailVerification(auth.currentUser).then(()=>customAlert("Verification email sent", "Email")); });
         }
         if(section === 'privacy') {
             document.getElementById('lastSeenToggle')?.addEventListener('click', async (e) => { e.stopPropagation(); const active = document.getElementById('lastSeenToggle').classList.toggle('active'); await updateDoc(doc(db,"users",currentUser.uid),{ privacyLastSeen: active }); });
@@ -692,11 +797,10 @@
             distSlider.oninput = () => document.getElementById('distancePrefVal').innerText = distSlider.value;
             document.getElementById('savePrefsBtn').onclick = async () => {
                 await updateDoc(doc(db,"users",currentUser.uid),{ prefAgeMin: parseInt(minSlider.value), prefAgeMax: parseInt(maxSlider.value), prefDistance: parseInt(distSlider.value) });
-                alert("Preferences saved");
+                await customAlert("Preferences saved", "Success");
             };
         }
         if(section === 'premium') {
-            document.getElementById('verifyBtn')?.addEventListener('click', () => showUpgradeModal());
             document.getElementById('subscribeGoldBtn')?.addEventListener('click', () => upgradeToPremium(currentUser.uid, 'gold'));
             document.getElementById('subscribePlatinumBtn')?.addEventListener('click', () => upgradeToPremium(currentUser.uid, 'platinum'));
         }
@@ -708,7 +812,7 @@
         if(plan === 'gold') features = { unlimitedSwipes: true, seeWhoLikedYou: true, readReceipts: false, boost: false };
         else features = { unlimitedSwipes: true, seeWhoLikedYou: true, readReceipts: true, boost: true };
         await updateDoc(doc(db, "users", userId), { isPremium: true, premiumPlan: plan, premiumExpiresAt: expiresAt, features });
-        alert(`Upgraded to ${plan.toUpperCase()}!`);
+        await customAlert(`Upgraded to ${plan.toUpperCase()}!`, "Premium");
         currentUser = (await getDoc(doc(db, "users", userId))).data();
         renderProfileUI();
     }
@@ -764,16 +868,12 @@
     // UI event binding
     document.getElementById('goToSignupLink')?.addEventListener('click', (e) => { e.preventDefault(); document.getElementById('loginView').style.display = 'none'; document.getElementById('signupView').style.display = 'flex'; });
     document.getElementById('goToLoginLink')?.addEventListener('click', (e) => { e.preventDefault(); document.getElementById('signupView').style.display = 'none'; document.getElementById('loginView').style.display = 'flex'; });
-    document.getElementById('forgotPasswordBtn')?.addEventListener('click', () => { const email = prompt("Enter your email:"); if(email) sendPasswordResetEmail(auth, email).then(()=>alert("Reset email sent")).catch(err=>alert(err.message)); });
-    document.getElementById('googleSignInBtn')?.addEventListener('click', async () => { try{ const user=await window.signInWithGoogle(); localStorage.setItem('currentUserUid',user.uid); currentUser=(await getDoc(doc(db,"users",user.uid))).data(); showMainApp(); }catch(err){ alert(err.message); } });
-    document.getElementById('googleSignUpBtn')?.addEventListener('click', async () => { try{ const user=await window.signInWithGoogle(); localStorage.setItem('currentUserUid',user.uid); currentUser=(await getDoc(doc(db,"users",user.uid))).data(); showMainApp(); }catch(err){ alert(err.message); } });
-    document.getElementById('signupFormElem')?.addEventListener('submit', async (e) => { e.preventDefault(); const name=document.getElementById('signupName').value, email=document.getElementById('signupEmail').value, pwd=document.getElementById('signupPassword').value, confirm=document.getElementById('confirmPwd').value; if(pwd!==confirm){ alert("Passwords mismatch"); return; } const gender=document.getElementById('signupGender').value, age=document.getElementById('signupAge').value; try{ await window.signupUser(email,pwd,name,age,gender); document.getElementById('signupView').style.display='none'; document.getElementById('loginView').style.display='flex'; }catch(err){ alert("Signup failed: "+err.message); } });
-    document.getElementById('loginFormElem')?.addEventListener('submit', async (e) => { e.preventDefault(); const email=document.getElementById('loginEmail').value, pwd=document.getElementById('loginPassword').value; try{ const user=await window.loginUserFirebase(email,pwd); localStorage.setItem('currentUserUid',user.uid); currentUser=(await getDoc(doc(db,"users",user.uid))).data(); showMainApp(); }catch(err){ alert("Login failed: "+err.message); } });
-    document.getElementById('verifyIdentityBtn')?.addEventListener('click', async () => { await updateDoc(doc(db,"users",currentUser.uid),{ verified: true }); alert("Identity verified!"); renderProfileUI(); });
-    document.getElementById('eventsBtn')?.addEventListener('click', loadEvents);
-    document.getElementById('uploadIntroBtn')?.addEventListener('click', () => { const file=document.getElementById('introUploadInput').files[0]; if(file) uploadIntro(file); else alert("Select a file first"); });
-    document.getElementById('adminDirectBtn')?.addEventListener('click', () => { const pwd=prompt("Admin password:"); if(pwd==='Crains'){ isAdminLoggedIn=true; renderAdminPanel(); } else alert("Wrong password"); });
-    const appealBtn=document.createElement('button'); appealBtn.innerText="Appeal Ban"; appealBtn.className="small-glass"; appealBtn.onclick=()=>{ const reason=prompt("Why should we unban you?"); if(reason) submitAppeal(reason); }; document.querySelector('.action-buttons-row')?.appendChild(appealBtn);
+    document.getElementById('forgotPasswordBtn')?.addEventListener('click', async () => { const email = await customPrompt("Enter your email:", "", "Reset Password"); if(email) sendPasswordResetEmail(auth, email).then(()=>customAlert("Reset email sent", "Email")).catch(err=>customAlert(err.message, "Error")); });
+    document.getElementById('googleSignInBtn')?.addEventListener('click', async () => { try{ const user=await window.signInWithGoogle(); localStorage.setItem('currentUserUid',user.uid); currentUser=(await getDoc(doc(db,"users",user.uid))).data(); showMainApp(); }catch(err){ await customAlert(err.message, "Error"); } });
+    document.getElementById('googleSignUpBtn')?.addEventListener('click', async () => { try{ const user=await window.signInWithGoogle(); localStorage.setItem('currentUserUid',user.uid); currentUser=(await getDoc(doc(db,"users",user.uid))).data(); showMainApp(); }catch(err){ await customAlert(err.message, "Error"); } });
+    document.getElementById('signupFormElem')?.addEventListener('submit', async (e) => { e.preventDefault(); const name=document.getElementById('signupName').value, email=document.getElementById('signupEmail').value, pwd=document.getElementById('signupPassword').value, confirm=document.getElementById('confirmPwd').value; if(pwd!==confirm){ await customAlert("Passwords mismatch", "Error"); return; } const gender=document.getElementById('signupGender').value, age=document.getElementById('signupAge').value; try{ await window.signupUser(email,pwd,name,age,gender); document.getElementById('signupView').style.display='none'; document.getElementById('loginView').style.display='flex'; }catch(err){ await customAlert("Signup failed: "+err.message, "Error"); } });
+    document.getElementById('loginFormElem')?.addEventListener('submit', async (e) => { e.preventDefault(); const email=document.getElementById('loginEmail').value, pwd=document.getElementById('loginPassword').value; try{ const user=await window.loginUserFirebase(email,pwd); localStorage.setItem('currentUserUid',user.uid); currentUser=(await getDoc(doc(db,"users",user.uid))).data(); showMainApp(); }catch(err){ await customAlert("Login failed: "+err.message, "Error"); } });
+    document.getElementById('uploadIntroBtn')?.addEventListener('click', () => { const file=document.getElementById('introUploadInput').files[0]; if(file) uploadIntro(file); else customAlert("Select a file first", "Error"); });
     document.getElementById('applyFilterBtn')?.addEventListener('click', () => renderExplore());
     document.querySelectorAll('.toggle-pwd').forEach(icon=>{ icon.addEventListener('click',function(){ let target=document.getElementById(this.dataset.target); if(target.type==='password') target.type='text'; else target.type='password'; this.classList.toggle('fa-eye');}); });
 
