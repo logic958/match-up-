@@ -910,63 +910,53 @@
     if(localStorage.getItem('currentUserUid')) { await loadCurrentUser(); if(currentUser) showMainApp(); else document.getElementById('loginView').style.display = 'flex'; } else { document.getElementById('loginView').style.display = 'flex'; }
     document.querySelectorAll('.toggle-pwd').forEach(icon=>{ icon.addEventListener('click',function(){ let target=document.getElementById(this.dataset.target); if(target.type==='password') target.type='text'; else target.type='password'; this.classList.toggle('fa-eye');}); });
     document.getElementById('applyFilterBtn')?.addEventListener('click',()=>renderExplore());
-</script>
 
-<!-- ========== ADDED FEATURES (admin, geolocation, payment, security rules, PWA) ========== -->
-<script type="module">
-    // This script adds new features without touching any original functions.
-    // It runs after the original script to avoid conflicts.
+    // ========== ADMIN PANEL (integrated inside the module, so it has access to db and currentUser) ==========
+    let isAdminLoggedIn = false;
 
-    // Wait for the original script to finish initializing
-    window.addEventListener('load', async () => {
-        // Give original script a moment to set up global variables
-        await new Promise(r => setTimeout(r, 500));
-
-        // ========== 1. ADMIN PANEL with hardcoded credentials ==========
-        let isAdminLoggedIn = false;
-
-        function showAdminLoginModal() {
-            const modal = document.createElement('div');
-            modal.className = 'stripe-modal';
-            modal.innerHTML = `
-                <h3 style="color:white;">Admin Login</h3>
-                <div class="input-group" style="margin:12px 0;">
-                    <i class="fas fa-envelope input-icon"></i>
-                    <input type="email" id="adminEmail" placeholder="Email" style="color:white;">
-                </div>
-                <div class="input-group" style="margin:12px 0;">
-                    <i class="fas fa-lock input-icon"></i>
-                    <input type="password" id="adminPassword" placeholder="Password" style="color:white;">
-                </div>
-                <button class="gradient-btn" id="adminLoginBtn">Login as Admin</button>
-                <button class="small-glass" id="closeAdminModal">Cancel</button>
-            `;
-            document.body.appendChild(modal);
-            modal.querySelector('#adminLoginBtn').onclick = () => {
-                const email = modal.querySelector('#adminEmail').value;
-                const pwd = modal.querySelector('#adminPassword').value;
-                if (email === 'tinocrain@gmail.com' && pwd === 'Crains') {
-                    isAdminLoggedIn = true;
-                    modal.remove();
-                    renderAdminPanel();
-                    alert('Admin logged in successfully');
-                } else {
-                    alert('Invalid admin credentials');
-                }
-            };
-            modal.querySelector('#closeAdminModal').onclick = () => modal.remove();
-        }
-
-        async function renderAdminPanel() {
-            if (!isAdminLoggedIn) return;
-            const profileContainer = document.getElementById('profileView').querySelector('.glass-card');
-            let adminDiv = document.getElementById('adminPanelDiv');
-            if (!adminDiv) {
-                adminDiv = document.createElement('div');
-                adminDiv.id = 'adminPanelDiv';
-                adminDiv.className = 'admin-panel';
-                profileContainer.appendChild(adminDiv);
+    function showAdminLoginModal() {
+        const modal = document.createElement('div');
+        modal.className = 'stripe-modal';
+        modal.innerHTML = `
+            <h3 style="color:white;">Admin Login</h3>
+            <div class="input-group" style="margin:12px 0;">
+                <i class="fas fa-envelope input-icon"></i>
+                <input type="email" id="adminEmail" placeholder="Email" style="color:white;">
+            </div>
+            <div class="input-group" style="margin:12px 0;">
+                <i class="fas fa-lock input-icon"></i>
+                <input type="password" id="adminPassword" placeholder="Password" style="color:white;">
+            </div>
+            <button class="gradient-btn" id="adminLoginBtn">Login as Admin</button>
+            <button class="small-glass" id="closeAdminModal">Cancel</button>
+        `;
+        document.body.appendChild(modal);
+        modal.querySelector('#adminLoginBtn').onclick = async () => {
+            const email = modal.querySelector('#adminEmail').value;
+            const pwd = modal.querySelector('#adminPassword').value;
+            if (email === 'tinocrain@gmail.com' && pwd === 'Crains') {
+                isAdminLoggedIn = true;
+                modal.remove();
+                await renderAdminPanel();
+                alert('Admin logged in successfully');
+            } else {
+                alert('Invalid admin credentials');
             }
+        };
+        modal.querySelector('#closeAdminModal').onclick = () => modal.remove();
+    }
+
+    async function renderAdminPanel() {
+        if (!isAdminLoggedIn) return;
+        const profileContainer = document.getElementById('profileView').querySelector('.glass-card');
+        let adminDiv = document.getElementById('adminPanelDiv');
+        if (!adminDiv) {
+            adminDiv = document.createElement('div');
+            adminDiv.id = 'adminPanelDiv';
+            adminDiv.className = 'admin-panel';
+            profileContainer.appendChild(adminDiv);
+        }
+        try {
             const usersSnap = await getDocs(collection(db, "users"));
             const reportsSnap = await getDocs(collection(db, "reports"));
             const totalUsers = usersSnap.size;
@@ -976,7 +966,7 @@
                 <h3 style="color:white;">👑 Admin Panel</h3>
                 <div class="admin-stats">
                     <div class="stat-card"><strong>Total Users</strong><br>${totalUsers}</div>
-                    <div class="stat-card"><strong>Premium</strong><br>${premiumUsers}</div>
+                    <div class="stat-card"><strong>Premium Users</strong><br>${premiumUsers}</div>
                 </div>
                 <h4 style="color:white;">Recent Reports</h4>
                 <div id="adminReportsList">
@@ -990,199 +980,65 @@
                 isAdminLoggedIn = false;
                 adminDiv.remove();
             });
+        } catch (err) {
+            console.error("Admin panel error:", err);
+            adminDiv.innerHTML = `<div style="color:red;">Error loading data: ${err.message}</div>`;
         }
+    }
 
-        // Add Admin button to settings list and also as a direct button on profile
-        function addAdminButtonToSettings() {
-            const settingsList = document.getElementById('settingsListContainer');
-            if (!settingsList || document.getElementById('adminSettingsBtn')) return;
-            const adminItem = document.createElement('div');
-            adminItem.id = 'adminSettingsBtn';
-            adminItem.className = 'settings-item';
-            adminItem.innerHTML = '<div class="settings-item-left"><i class="fas fa-shield-alt"></i><span>Admin Panel</span></div><i class="fas fa-chevron-right"></i>';
-            adminItem.addEventListener('click', () => {
+    // Add admin button to profile page (below action buttons)
+    function addAdminButton() {
+        if (document.getElementById('adminDirectBtn')) return;
+        const actionRow = document.querySelector('.action-buttons-row');
+        if (actionRow) {
+            const adminDirect = document.createElement('button');
+            adminDirect.id = 'adminDirectBtn';
+            adminDirect.className = 'small-glass';
+            adminDirect.innerHTML = '<i class="fas fa-shield-alt"></i> Admin';
+            adminDirect.style.background = '#ff4d6d';
+            adminDirect.onclick = () => {
                 if (isAdminLoggedIn) {
                     renderAdminPanel();
-                    document.getElementById('settingsDetailView').style.display = 'none';
-                    document.getElementById('profileView').classList.add('active-view');
                 } else {
                     showAdminLoginModal();
                 }
-            });
-            settingsList.appendChild(adminItem);
+            };
+            actionRow.appendChild(adminDirect);
         }
+    }
 
-        // Also add a direct button on the profile page (below action buttons) for quick access
-        function addDirectAdminButton() {
-            if (document.getElementById('directAdminBtn')) return;
-            const actionRow = document.querySelector('.action-buttons-row');
-            if (actionRow && !document.getElementById('directAdminBtn')) {
-                const adminDirect = document.createElement('button');
-                adminDirect.id = 'directAdminBtn';
-                adminDirect.className = 'small-glass';
-                adminDirect.innerHTML = '<i class="fas fa-shield-alt"></i> Admin';
-                adminDirect.style.background = '#ff4d6d';
-                adminDirect.onclick = () => {
-                    if (isAdminLoggedIn) {
-                        renderAdminPanel();
-                    } else {
-                        showAdminLoginModal();
-                    }
-                };
-                actionRow.appendChild(adminDirect);
+    // Also add to settings list
+    function addAdminButtonToSettings() {
+        const settingsList = document.getElementById('settingsListContainer');
+        if (!settingsList || document.getElementById('adminSettingsBtn')) return;
+        const adminItem = document.createElement('div');
+        adminItem.id = 'adminSettingsBtn';
+        adminItem.className = 'settings-item';
+        adminItem.innerHTML = '<div class="settings-item-left"><i class="fas fa-shield-alt"></i><span>Admin Panel</span></div><i class="fas fa-chevron-right"></i>';
+        adminItem.addEventListener('click', () => {
+            if (isAdminLoggedIn) {
+                renderAdminPanel();
+                document.getElementById('settingsDetailView').style.display = 'none';
+                document.getElementById('profileView').classList.add('active-view');
+            } else {
+                showAdminLoginModal();
             }
-        }
-
-        const settingsObserver = new MutationObserver(() => {
-            addAdminButtonToSettings();
-            addDirectAdminButton();
         });
-        settingsObserver.observe(document.body, { childList: true, subtree: true });
-
-        // ========== 2. GEOLOCATION & DISTANCE FILTER ==========
-        const originalRenderExplore = window.renderExplore;
-        if (originalRenderExplore) {
-            window.renderExplore = async function() {
-                let users = await window.getUsersFirebase();
-                let filtered = users.filter(u => u.uid !== currentUser?.uid && !(currentUser.blocked || []).includes(u.uid));
-                const minAge = parseInt(document.getElementById('filterAgeMin').value) || (currentUser.prefAgeMin || 18);
-                const maxAge = parseInt(document.getElementById('filterAgeMax').value) || (currentUser.prefAgeMax || 100);
-                const maxDistance = parseInt(document.getElementById('filterDistance').value) || 100;
-                const gender = document.getElementById('filterGender').value;
-                if(gender) filtered = filtered.filter(u => u.gender === gender);
-                filtered = filtered.filter(u => u.age >= minAge && u.age <= maxAge);
-                if (currentUser.location && currentUser.location.lat) {
-                    const haversineDistance = (loc1, loc2) => {
-                        if (!loc1 || !loc2) return Infinity;
-                        const R = 6371;
-                        const dLat = (loc2.lat - loc1.lat) * Math.PI / 180;
-                        const dLon = (loc2.lng - loc1.lng) * Math.PI / 180;
-                        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                                  Math.cos(loc1.lat * Math.PI/180) * Math.cos(loc2.lat * Math.PI/180) *
-                                  Math.sin(dLon/2) * Math.sin(dLon/2);
-                        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-                        return R * c;
-                    };
-                    filtered = filtered.filter(u => u.location && haversineDistance(currentUser.location, u.location) <= maxDistance);
-                }
-                const pendingLikes = users.filter(u => u.swipes && u.swipes.includes(currentUser.uid) && !currentUser.swipes?.includes(u.uid));
-                const matchQueueDiv = document.getElementById('matchQueue');
-                if (currentUser.features?.seeWhoLikedYou === true) {
-                    matchQueueDiv.style.display = 'block';
-                    document.getElementById('pendingLikesList').innerHTML = pendingLikes.map(u => `<div style="padding:8px; border-bottom:1px solid rgba(255,255,255,0.1);"><img src="${u.profilePic || 'https://randomuser.me/api/portraits/lego/1.jpg'}" width="40" style="border-radius:50%;"> ${u.name}, ${u.age} <button class="small-glass like-back" data-id="${u.uid}" style="float:right;">Like Back</button></div>`).join('');
-                    document.querySelectorAll('.like-back').forEach(btn => btn.addEventListener('click', async () => { const targetId = btn.dataset.id; const swipes = currentUser.swipes || []; if(!swipes.includes(targetId)) { swipes.push(targetId); await window.updateUserFirebase(currentUser.uid, { swipes }); currentUser.swipes = swipes; const target = users.find(u => u.uid === targetId); const matches = currentUser.matches || []; if (!matches.includes(targetId) && target.swipes && target.swipes.includes(currentUser.uid)) { matches.push(targetId); await window.updateUserFirebase(currentUser.uid, { matches }); currentUser.matches = matches; alert(`✨ Matched with ${target.name}! ✨`); } await window.renderExplore(); } }));
-                } else {
-                    matchQueueDiv.style.display = 'none';
-                }
-                document.getElementById('exploreList').innerHTML = filtered.map(u => `<div class="explore-card"><img src="${u.profilePic || 'https://randomuser.me/api/portraits/lego/1.jpg'}" width="80" style="border-radius:50%;"><h4>${u.name}, ${u.age}</h4><button class="small-glass explore-like" data-id="${u.uid}">Like</button><button class="small-glass report-btn" data-id="${u.uid}" style="background:rgba(255,80,80,0.5);">Report</button></div>`).join('');
-                document.querySelectorAll('.explore-like').forEach(btn => btn.addEventListener('click', async () => { const targetId = btn.dataset.id; const swipes = currentUser.swipes || []; if(!swipes.includes(targetId)) { swipes.push(targetId); await window.updateUserFirebase(currentUser.uid, { swipes }); currentUser.swipes = swipes; const target = users.find(u => u.uid === targetId); if (target.swipes && target.swipes.includes(currentUser.uid)) { const matches = currentUser.matches || []; if (!matches.includes(targetId)) { matches.push(targetId); await window.updateUserFirebase(currentUser.uid, { matches }); currentUser.matches = matches; alert(`✨ Matched with ${target.name}! ✨`); } } alert("Liked!"); await window.renderExplore(); } }));
-                document.querySelectorAll('.report-btn').forEach(btn => btn.addEventListener('click', () => { const targetId = btn.dataset.id; const target = filtered.find(u => u.uid === targetId); showReportModal(targetId, target?.name); }));
-            };
-        }
-
-        // Add geolocation on login
-        const originalShowMainApp = window.showMainApp;
-        if (originalShowMainApp) {
-            window.showMainApp = async function() {
-                await originalShowMainApp();
-                if (currentUser && navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(async (pos) => {
-                        const location = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                        await window.updateUserFirebase(currentUser.uid, { location });
-                        currentUser.location = location;
-                    }, () => {});
-                }
-            };
-        }
-
-        // ========== 3. STRIPE MOCK PAYMENT (replace upgrade modal) ==========
-        const originalUpgradeToPremium = window.upgradeToPremium;
-        if (originalUpgradeToPremium) {
-            window.upgradeToPremium = async function(userId, plan) {
-                const modal = document.createElement('div');
-                modal.className = 'stripe-modal';
-                modal.innerHTML = `
-                    <h3 style="color:white;">💳 Complete Payment</h3>
-                    <div class="stripe-card">
-                        <label>Card Number</label>
-                        <input type="text" placeholder="4242 4242 4242 4242" style="width:100%; padding:8px; margin:4px 0;" value="4242 4242 4242 4242">
-                        <div style="display:flex; gap:8px;">
-                            <input type="text" placeholder="MM/YY" value="12/28" style="flex:1; padding:8px;">
-                            <input type="text" placeholder="CVC" value="123" style="flex:1; padding:8px;">
-                        </div>
-                    </div>
-                    <button class="gradient-btn" id="mockPayBtn">Pay ${plan === 'gold' ? '$3.27' : '$12.99'}</button>
-                    <button class="small-glass" id="closeStripeModal">Cancel</button>
-                `;
-                document.body.appendChild(modal);
-                return new Promise((resolve) => {
-                    modal.querySelector('#mockPayBtn').onclick = async () => {
-                        modal.remove();
-                        await originalUpgradeToPremium(userId, plan);
-                        resolve(true);
-                    };
-                    modal.querySelector('#closeStripeModal').onclick = () => {
-                        modal.remove();
-                        resolve(false);
-                    };
-                });
-            };
-        }
-
-        // ========== 4. FIREBASE SECURITY RULES DOWNLOAD BUTTON ==========
-        const rulesText = `rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /users/{userId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth.uid == userId;
+        settingsList.appendChild(adminItem);
     }
-    match /chats/{chatId}/messages/{message} {
-      allow read, write: if request.auth != null;
-    }
-    match /reports/{report} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
-    }
-  }
-}`;
-        const rulesBtn = document.createElement('button');
-        rulesBtn.className = 'small-glass';
-        rulesBtn.innerText = '📜 Download Security Rules';
-        rulesBtn.style.position = 'fixed';
-        rulesBtn.style.bottom = '80px';
-        rulesBtn.style.right = '16px';
-        rulesBtn.style.zIndex = '1000';
-        rulesBtn.style.background = '#ff4d6d';
-        rulesBtn.onclick = () => {
-            const blob = new Blob([rulesText], {type: 'text/plain'});
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'firestore.rules';
-            a.click();
-            URL.revokeObjectURL(a.href);
-        };
-        document.body.appendChild(rulesBtn);
 
-        // ========== 5. PWA MANIFEST FALLBACK ==========
-        const manifestLink = document.querySelector('link[rel="manifest"]');
-        if (manifestLink && manifestLink.href === 'manifest.json') {
-            fetch('manifest.json').catch(() => {
-                const fallbackManifest = {
-                    name: "Lumeet",
-                    short_name: "Lumeet",
-                    start_url: ".",
-                    display: "standalone",
-                    theme_color: "#ff4d6d",
-                    background_color: "#ffffff",
-                    icons: [{"src": "https://via.placeholder.com/192x192.png", "sizes": "192x192", "type": "image/png"}]
-                };
-                const blob = new Blob([JSON.stringify(fallbackManifest)], {type: 'application/json'});
-                const url = URL.createObjectURL(blob);
-                manifestLink.href = url;
-            });
-        }
+    // Observe DOM to add buttons after profile renders
+    const observer = new MutationObserver(() => {
+        addAdminButton();
+        addAdminButtonToSettings();
     });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // Also try after a short delay
+    setTimeout(() => {
+        addAdminButton();
+        addAdminButtonToSettings();
+    }, 1000);
 </script>
 
 <script>
