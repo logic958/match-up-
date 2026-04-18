@@ -181,7 +181,7 @@
 </div>
 
 <script type="module">
-    // ========== ORIGINAL FULL SCRIPT (intact, copied from your working version) ==========
+    // ========== ORIGINAL FULL SCRIPT (intact, exactly as your working version) ==========
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup, sendEmailVerification, updateEmail, updatePassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc, getDocs, updateDoc, collection, addDoc, query, orderBy, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -992,7 +992,7 @@
             });
         }
 
-        // Add Admin button to settings list
+        // Add Admin button to settings list and also as a direct button on profile
         function addAdminButtonToSettings() {
             const settingsList = document.getElementById('settingsListContainer');
             if (!settingsList || document.getElementById('adminSettingsBtn')) return;
@@ -1012,13 +1012,34 @@
             settingsList.appendChild(adminItem);
         }
 
+        // Also add a direct button on the profile page (below action buttons) for quick access
+        function addDirectAdminButton() {
+            if (document.getElementById('directAdminBtn')) return;
+            const actionRow = document.querySelector('.action-buttons-row');
+            if (actionRow && !document.getElementById('directAdminBtn')) {
+                const adminDirect = document.createElement('button');
+                adminDirect.id = 'directAdminBtn';
+                adminDirect.className = 'small-glass';
+                adminDirect.innerHTML = '<i class="fas fa-shield-alt"></i> Admin';
+                adminDirect.style.background = '#ff4d6d';
+                adminDirect.onclick = () => {
+                    if (isAdminLoggedIn) {
+                        renderAdminPanel();
+                    } else {
+                        showAdminLoginModal();
+                    }
+                };
+                actionRow.appendChild(adminDirect);
+            }
+        }
+
         const settingsObserver = new MutationObserver(() => {
             addAdminButtonToSettings();
+            addDirectAdminButton();
         });
         settingsObserver.observe(document.body, { childList: true, subtree: true });
 
         // ========== 2. GEOLOCATION & DISTANCE FILTER ==========
-        // Override renderExplore to include distance filtering
         const originalRenderExplore = window.renderExplore;
         if (originalRenderExplore) {
             window.renderExplore = async function() {
@@ -1030,7 +1051,6 @@
                 const gender = document.getElementById('filterGender').value;
                 if(gender) filtered = filtered.filter(u => u.gender === gender);
                 filtered = filtered.filter(u => u.age >= minAge && u.age <= maxAge);
-                // Distance filter
                 if (currentUser.location && currentUser.location.lat) {
                     const haversineDistance = (loc1, loc2) => {
                         if (!loc1 || !loc2) return Infinity;
