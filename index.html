@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#ff4d6d">
-    <title>Lumeet | Complete Dating App + All Improvements</title>
+    <title>Lumeet | Complete Dating App</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* ========== FULL ORIGINAL CSS (kept intact) ========== */
+        /* ========== FULL ORIGINAL CSS (restored) ========== */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Poppins', sans-serif; }
         body { min-height: 100vh; background: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=2070&auto=format') center/cover no-repeat fixed; }
         .bg-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.25); backdrop-filter: blur(4px); z-index: -1; }
@@ -148,17 +148,17 @@
 <body>
 <div class="bg-overlay"></div>
 
-<!-- LOGIN / SIGNUP (complete) -->
-<div id="loginView" class="auth-container"><div class="glass-card auth-card"><div class="logo-area"><i class="fas fa-heart logo-icon"></i><h1>Connectly</h1><p>where sparks glow</p></div><form id="loginFormElem"><div class="input-group"><i class="fas fa-envelope input-icon"></i><input type="email" id="loginEmail" placeholder="Email" required></div><div class="input-group"><i class="fas fa-lock input-icon"></i><input type="password" id="loginPassword" placeholder="Password"><i class="fas fa-eye-slash toggle-pwd" data-target="loginPassword"></i></div><button type="submit" class="gradient-btn">Log In</button><div class="forgot-password" id="forgotPasswordBtn">Forgot Password?</div><div class="divider">or</div><button type="button" id="googleSignInBtn" class="gradient-btn google-btn"><i class="fab fa-google"></i> Sign in with Google</button><p class="switch-auth">No account? <a href="#" id="goToSignupLink">Sign up</a></p>
+<!-- LOGIN / SIGNUP (full) -->
+<div id="loginView" class="auth-container"><div class="glass-card auth-card"><div class="logo-area"><i class="fas fa-heart logo-icon"></i><h1>Lumeet</h1><p>where sparks glow</p></div><form id="loginFormElem"><div class="input-group"><i class="fas fa-envelope input-icon"></i><input type="email" id="loginEmail" placeholder="Email" required></div><div class="input-group"><i class="fas fa-lock input-icon"></i><input type="password" id="loginPassword" placeholder="Password"><i class="fas fa-eye-slash toggle-pwd" data-target="loginPassword"></i></div><button type="submit" class="gradient-btn">Log In</button><div class="forgot-password" id="forgotPasswordBtn">Forgot Password?</div><div class="divider">or</div><button type="button" id="googleSignInBtn" class="gradient-btn google-btn"><i class="fab fa-google"></i> Sign in with Google</button><p class="switch-auth">No account? <a href="#" id="goToSignupLink">Sign up</a></p>
         <div class="owner-credit"><span>Website Owner: Crayne Sakala</span><i class="fas fa-check-circle gold-check"></i></div>
     </form></div></div>
 <div id="signupView" class="auth-container" style="display:none;"><div class="glass-card auth-card"><h2 style="color:white;">Create account</h2><form id="signupFormElem"><div class="input-group"><i class="fas fa-user input-icon"></i><input type="text" id="signupName" placeholder="Full name"></div><div class="input-group"><i class="fas fa-envelope input-icon"></i><input type="email" id="signupEmail" placeholder="Email"></div><div class="input-group"><i class="fas fa-lock input-icon"></i><input type="password" id="signupPassword" placeholder="Password"></div><div class="input-group"><i class="fas fa-check-circle input-icon"></i><input type="password" id="confirmPwd" placeholder="Confirm password"></div><div class="input-group"><i class="fas fa-venus-mars input-icon"></i><select id="signupGender"><option>Female</option><option>Male</option></select></div><div class="input-group"><i class="fas fa-calendar input-icon"></i><input type="number" id="signupAge" placeholder="Age"></div><button type="submit" class="gradient-btn">Create account</button><div class="divider">or</div><button type="button" id="googleSignUpBtn" class="gradient-btn google-btn"><i class="fab fa-google"></i> Sign up with Google</button><p class="switch-auth">Already a member? <a href="#" id="goToLoginLink">Log in</a></p>
         <div class="owner-credit"><span>Website Owner: Crayne Sakala</span><i class="fas fa-check-circle gold-check"></i></div>
     </form></div></div>
 
-<!-- MAIN APP (full structure) -->
+<!-- MAIN APP (complete) -->
 <div id="mainApp" class="app-main">
-    <div id="swipeView" class="view"><h2 style="color:white; text-align:center;">Swipe</h2><div id="swipeCounter" class="swipe-counter">Swipes remaining: 20</div><div id="visibilityScore" class="visibility-score" style="margin:8px auto; text-align:center;">Profile seen by 0 today</div><div id="cardsStack" class="cards-container"></div><div class="action-buttons"><div class="action-circle pass-btn" id="passBtn"><i class="fas fa-times fa-2x"></i></div><div class="action-circle like-btn" id="likeBtn"><i class="fas fa-heart fa-2x"></i></div></div><div id="matchToast" style="position:fixed; bottom:30%; left:10%; right:10%; background:gold; border-radius:50px; text-align:center; padding:12px; display:none; z-index:200;">✨ It's a match! ✨</div></div>
+    <div id="swipeView" class="view"><h2 style="color:white; text-align:center;">Swipe</h2><div id="swipeCounter" class="swipe-counter">Swipes remaining: 20</div><div id="visibilityScore" class="visibility-score" style="margin:8px auto;">Profile seen by 0 today</div><div id="cardsStack" class="cards-container"></div><div class="action-buttons"><div class="action-circle pass-btn" id="passBtn"><i class="fas fa-times fa-2x"></i></div><div class="action-circle like-btn" id="likeBtn"><i class="fas fa-heart fa-2x"></i></div></div><div id="matchToast" style="position:fixed; bottom:30%; left:10%; right:10%; background:gold; border-radius:50px; text-align:center; padding:12px; display:none; z-index:200;">✨ It's a match! ✨</div></div>
     <div id="exploreView" class="view"><h2 style="color:white;">Discover</h2><div style="display:flex; gap:8px; flex-wrap:wrap;"><input type="number" id="filterAgeMin" placeholder="Min age" style="background:rgba(255,255,255,0.2); border-radius:40px; padding:8px; width:80px;"><input type="number" id="filterAgeMax" placeholder="Max age" style="background:rgba(255,255,255,0.2); border-radius:40px; padding:8px; width:80px;"><input type="number" id="filterDistance" placeholder="Distance (km)" style="background:rgba(255,255,255,0.2); border-radius:40px; padding:8px; width:100px;"><select id="filterIntent" style="background:rgba(255,255,255,0.2); border-radius:40px;"><option value="">Intent (any)</option><option>Serious</option><option>Casual</option><option>Friends</option></select><select id="filterGender" style="background:rgba(255,255,255,0.2); border-radius:40px;"><option value="">Any gender</option><option>Female</option><option>Male</option></select><button id="applyFilterBtn" class="small-glass">Filter</button></div><div id="matchQueue" style="background:rgba(0,0,0,0.3); border-radius:28px; padding:12px; margin-top:12px;"><h3 style="color:white;">People who liked you (last 5)</h3><div id="pendingLikesList"></div></div><div id="exploreList" class="explore-grid"></div></div>
     <div id="messagesView" class="view"><div id="chatListContainer" class="chat-list-container"></div><div id="chatScreenContainer" class="chat-screen-container" style="display:none;"></div></div>
     <div id="profileView" class="view"><div class="glass-card" style="padding:20px;"><div style="text-align:right;"><i class="fas fa-cog" id="openSettingsBtn" style="font-size:1.5rem; color:white; cursor:pointer;"></i></div><div class="profile-top"><div style="position:relative; display:inline-block;"><img id="profileAvatar" class="profile-pic-large" src=""><div class="camera-overlay" id="changePhotoBtn"><i class="fas fa-camera"></i></div><input type="file" id="photoUploadInput" style="display:none;" accept="image/*"></div><h2 style="color:white; margin-top:8px;"><span id="profileUsername"></span><i class="fas fa-check-circle verified-badge" style="display:none;"></i><span id="premiumBadge" class="premium-badge" style="display:none;">⭐ Premium</span></h2><p id="profileStatus" style="color:#ccc;"></p><div class="last-seen-preview" id="lastSeenPreview"></div><div class="progress-bar"><div class="progress-fill" id="profileProgress"></div></div><div class="stats-row"><div><strong id="matchesCount">0</strong><br>Matches</div><div><strong id="likesCount">0</strong><br>Likes</div><div><strong id="viewsCount">0</strong><br>Views</div></div><div class="action-buttons-row"><button id="editProfileBtn"><i class="fas fa-edit"></i> Edit Profile</button><button id="shareProfileBtn"><i class="fas fa-share-alt"></i> Share</button><button id="boostProfileBtn"><i class="fas fa-rocket"></i> Boost</button><button id="upgradeBtn" class="gradient-btn" style="background: linear-gradient(135deg, #ffd700, #ffb347);">Upgrade</button><button id="verifyIdentityBtn" class="small-glass" style="background:#22c55e;">Verify ID</button><button id="adminDirectBtn" class="small-glass" style="background:#ff4d6d;">Admin</button><button id="eventsBtn" class="small-glass">📅 Events</button></div></div><div class="settings-list" id="settingsListContainer"></div><button id="logoutBtnProfile" style="background:rgba(255,80,80,0.5); border:none; border-radius:60px; padding:12px; width:100%; margin-top:20px; color:white;">Logout</button></div></div>
@@ -194,8 +194,9 @@
     let unsubscribeUser = null;
     let currentChatPartner = null;
     let typingTimeout = null;
+    let unsubscribeMessages = null;
 
-    // ========== AUTH FUNCTIONS (full) ==========
+    // ========== AUTH (full, with email verification) ==========
     window.signupUser = async (email, password, name, age, gender) => {
         try {
             const userCred = await createUserWithEmailAndPassword(auth, email, password);
@@ -250,7 +251,7 @@
         } catch (err) { throw err; }
     };
 
-    // ========== NEW FEATURES (fully real) ==========
+    // ========== NEW REAL FEATURES ==========
     async function loadEvents() {
         const eventsSnap = await getDocs(query(collection(db, "events"), orderBy("date")));
         const events = eventsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -292,38 +293,494 @@
         document.getElementById('adminLogoutBtn').onclick = () => { isAdminLoggedIn = false; adminDiv.remove(); };
     }
 
-    // ========== CORE APP FUNCTIONS (swipe, chat, profile) – simplified but complete ==========
-    async function getAvailableProfiles() { const users = await getDocs(collection(db, "users")); return users.docs.map(d => d.data()).filter(u => u.uid !== currentUser.uid && !currentUser.swipes?.includes(u.uid) && !currentUser.blocked?.includes(u.uid)).slice(0,10); }
-    function computeCompatibility(user) { let shared = (currentUser.interests || []).filter(i => (user.interests || []).includes(i)).length; let maxInterests = Math.max((currentUser.interests || []).length, (user.interests || []).length); let interestScore = maxInterests ? (shared / maxInterests) * 50 : 0; let ageScore = Math.max(0, 50 - Math.abs(currentUser.age - user.age) * 2); return Math.min(100, Math.floor(interestScore + ageScore)); }
-    async function renderSwipeCards() { let available = await getAvailableProfiles(); if(available.length===0){ document.getElementById('cardsStack').innerHTML = `<div class="glass-card">No more profiles</div>`; return; } let idx=0; const container=document.getElementById('cardsStack'); function display(){ if(idx>=available.length) return; const p=available[idx]; container.innerHTML = `<div class="swipe-card quality-match"><img class="card-img" src="${p.profilePic}"><h3>${p.name}, ${p.age}</h3><p>${p.bio}</p><div>🎯 Intent: ${p.intent}</div><div>❤️ Compatibility: ${computeCompatibility(p)}%</div><button class="small-glass report-profile-btn" data-id="${p.uid}">Report</button></div>`; } display(); document.getElementById('likeBtn').onclick = () => { if(idx>=available.length) return; const target=available[idx]; currentUser.swipes.push(target.uid); updateDoc(doc(db,"users",currentUser.uid),{swipes:currentUser.swipes}); if(target.swipes?.includes(currentUser.uid)){ alert(`Matched with ${target.name}!`); showNotification(`🎉 New match with ${target.name}!`); } idx++; if(idx<available.length) display(); else renderSwipeCards(); }; document.getElementById('passBtn').onclick = () => { idx++; if(idx<available.length) display(); else renderSwipeCards(); }; }
-    async function renderExplore() { let users = await getDocs(collection(db,"users")); let filtered = users.docs.map(d=>d.data()).filter(u=>u.uid!==currentUser.uid && !currentUser.blocked?.includes(u.uid)); const minAge=parseInt(document.getElementById('filterAgeMin').value)||18, maxAge=parseInt(document.getElementById('filterAgeMax').value)||100, intent=document.getElementById('filterIntent').value, gender=document.getElementById('filterGender').value; if(gender) filtered=filtered.filter(u=>u.gender===gender); if(intent) filtered=filtered.filter(u=>u.intent===intent); filtered=filtered.filter(u=>u.age>=minAge && u.age<=maxAge); document.getElementById('exploreList').innerHTML = filtered.map(u=>`<div class="explore-card"><img src="${u.profilePic}" width="80" style="border-radius:50%;"><h4>${u.name}, ${u.age}</h4><button class="small-glass explore-like" data-id="${u.uid}">Like</button></div>`).join(''); document.querySelectorAll('.explore-like').forEach(btn=>btn.addEventListener('click',async()=>{ const targetId=btn.dataset.id; currentUser.swipes.push(targetId); await updateDoc(doc(db,"users",currentUser.uid),{swipes:currentUser.swipes}); alert("Liked!"); })); }
-    async function renderProfileUI() { document.getElementById('profileUsername').innerText=currentUser.name; document.getElementById('profileStatus').innerText=currentUser.bio; document.getElementById('profileAvatar').src=currentUser.profilePic; document.getElementById('matchesCount').innerText=currentUser.matches?.length||0; document.getElementById('likesCount').innerText=currentUser.swipes?.length||0; if(currentUser.verified) document.querySelector('.verified-badge').style.display='inline-block'; if(currentUser.isPremium) document.getElementById('premiumBadge').style.display='inline-block'; document.getElementById('editProfileBtn').onclick=()=>{ document.getElementById('profileView').classList.remove('active-view'); document.getElementById('editProfileView').style.display='block'; loadEditProfile(); }; document.getElementById('logoutBtnProfile').onclick=()=>{ localStorage.removeItem('currentUserUid'); window.location.reload(); }; }
-    function loadEditProfile() { document.getElementById('editName').value=currentUser.name; document.getElementById('editBio').value=currentUser.bio; document.getElementById('editGender').value=currentUser.gender; document.getElementById('editAge').value=currentUser.age; document.getElementById('editLocation').value=currentUser.location; const interests=currentUser.interests||[]; const container=document.getElementById('interestsContainer'); function renderTags(){ container.innerHTML=interests.map((tag,i)=>`<span class="tag">${tag}<i class="fas fa-times-circle remove-tag" data-index="${i}"></i></span>`).join(''); } renderTags(); document.getElementById('newInterestInput').onkeypress=e=>{ if(e.key==='Enter' && e.target.value.trim()){ interests.push(e.target.value.trim()); renderTags(); e.target.value=''; } }; document.getElementById('saveProfileChanges').onclick=async()=>{ await updateDoc(doc(db,"users",currentUser.uid),{ name:document.getElementById('editName').value, bio:document.getElementById('editBio').value, gender:document.getElementById('editGender').value, age:parseInt(document.getElementById('editAge').value), location:document.getElementById('editLocation').value, interests:interests, intent:document.getElementById('editIntent').value }); alert("Profile updated"); document.getElementById('backFromEdit').click(); }; document.getElementById('backFromEdit').onclick=()=>{ document.getElementById('editProfileView').style.display='none'; document.getElementById('profileView').classList.add('active-view'); renderProfileUI(); }; }
-    function attachNavEvents(){ document.querySelectorAll('.nav-item').forEach(item=>{ item.addEventListener('click',()=>{ const viewId=item.dataset.nav; document.querySelectorAll('.view').forEach(v=>v.classList.remove('active-view')); document.getElementById(viewId+'View').classList.add('active-view'); document.querySelectorAll('.nav-item').forEach(nav=>nav.classList.remove('active')); item.classList.add('active'); if(viewId==='messages') renderChatList(); if(viewId==='explore') renderExplore(); if(viewId==='profile') renderProfileUI(); if(viewId==='swipe') renderSwipeCards(); }); }); }
-    async function renderChatList() { const container=document.getElementById('chatListContainer'); const matches=currentUser.matches||[]; if(matches.length===0){ container.innerHTML=`<div class="glass-card">No matches yet</div>`; return; } container.innerHTML=matches.map(m=>`<div class="chat-list-item" data-id="${m}"><img class="avatar" src="https://randomuser.me/api/portraits/lego/1.jpg"><div class="chat-info"><div class="chat-name">${m}</div></div></div>`).join(''); document.querySelectorAll('.chat-list-item').forEach(el=>el.addEventListener('click',()=>openChatScreen(el.dataset.id))); }
-    async function openChatScreen(partnerId) { currentChatPartner=partnerId; document.getElementById('chatListContainer').style.display='none'; const screenDiv=document.getElementById('chatScreenContainer'); screenDiv.style.display='block'; screenDiv.innerHTML=`<div class="chat-header"><button class="back-btn" id="backToChatList"><i class="fas fa-arrow-left"></i></button><div class="chat-profile"><div><div class="chat-name">Chat</div></div></div></div><div class="messages-area" id="messagesArea"></div><div class="input-area"><input type="text" id="messageInputChat" placeholder="Type a message..."><button id="sendChatMsg"><i class="fas fa-paper-plane"></i></button></div>`; document.getElementById('backToChatList').onclick=()=>{ screenDiv.style.display='none'; document.getElementById('chatListContainer').style.display='block'; renderChatList(); }; document.getElementById('sendChatMsg').onclick=()=>{ const input=document.getElementById('messageInputChat'); if(input.value.trim()) alert("Message sent (demo)"); }; }
-    async function showMainApp() { document.getElementById('loginView').style.display='none'; document.getElementById('signupView').style.display='none'; document.getElementById('mainApp').style.display='block'; await loadCurrentUser(); await renderAll(); attachNavEvents(); await renderSwipeCards(); renderChatList(); }
-    async function loadCurrentUser() { const uid=localStorage.getItem('currentUserUid'); if(uid) currentUser=(await getDoc(doc(db,"users",uid))).data(); }
+    // ========== CORE APP FUNCTIONS (restored from your original) ==========
+    async function getAvailableProfiles() {
+        const users = await getDocs(collection(db, "users"));
+        return users.docs.map(d => d.data()).filter(u => u.uid !== currentUser.uid && !currentUser.swipes?.includes(u.uid) && !currentUser.blocked?.includes(u.uid));
+    }
+    function computeCompatibility(user) {
+        let shared = (currentUser.interests || []).filter(i => (user.interests || []).includes(i)).length;
+        let maxInterests = Math.max((currentUser.interests || []).length, (user.interests || []).length);
+        let interestScore = maxInterests ? (shared / maxInterests) * 50 : 0;
+        let ageScore = Math.max(0, 50 - Math.abs(currentUser.age - user.age) * 2);
+        return Math.min(100, Math.floor(interestScore + ageScore));
+    }
+    async function renderSwipeCards() {
+        let available = await getAvailableProfiles();
+        if(available.length === 0){ document.getElementById('cardsStack').innerHTML = `<div class="glass-card">No more profiles</div>`; return; }
+        let idx = 0; const container = document.getElementById('cardsStack');
+        function display() {
+            if(idx >= available.length) return;
+            const p = available[idx];
+            container.innerHTML = `<div class="swipe-card quality-match"><img class="card-img" src="${p.profilePic}"><h3>${p.name}, ${p.age}</h3><p>${p.bio}</p><div>🎯 Intent: ${p.intent}</div><div>❤️ Compatibility: ${computeCompatibility(p)}%</div><button class="small-glass report-profile-btn" data-id="${p.uid}">Report</button></div>`;
+            const reportBtn = container.querySelector('.report-profile-btn');
+            if(reportBtn) reportBtn.addEventListener('click', (e) => { e.stopPropagation(); showReportModal(p.uid, p.name); });
+        }
+        display();
+        document.getElementById('likeBtn').onclick = async () => {
+            if(idx >= available.length) return;
+            const target = available[idx];
+            const swipes = currentUser.swipes || [];
+            swipes.push(target.uid);
+            await updateDoc(doc(db, "users", currentUser.uid), { swipes });
+            currentUser.swipes = swipes;
+            if(target.swipes && target.swipes.includes(currentUser.uid)) {
+                const matches = currentUser.matches || [];
+                if(!matches.includes(target.uid)) {
+                    matches.push(target.uid);
+                    await updateDoc(doc(db, "users", currentUser.uid), { matches });
+                    currentUser.matches = matches;
+                    const targetMatches = target.matches || [];
+                    if(!targetMatches.includes(currentUser.uid)) {
+                        targetMatches.push(currentUser.uid);
+                        await updateDoc(doc(db, "users", target.uid), { matches: targetMatches });
+                    }
+                    document.getElementById('matchToast').style.display = 'block';
+                    setTimeout(() => document.getElementById('matchToast').style.display = 'none', 3000);
+                    showNotification(`🎉 New match with ${target.name}!`);
+                }
+            }
+            idx++;
+            if(idx < available.length) display();
+            else renderSwipeCards();
+            renderProfileUI();
+            renderChatList();
+        };
+        document.getElementById('passBtn').onclick = async () => {
+            if(idx >= available.length) return;
+            const swipes = currentUser.swipes || [];
+            swipes.push(available[idx].uid);
+            await updateDoc(doc(db, "users", currentUser.uid), { swipes });
+            currentUser.swipes = swipes;
+            idx++;
+            if(idx < available.length) display();
+            else renderSwipeCards();
+        };
+    }
+    async function renderExplore() {
+        let users = await getDocs(collection(db, "users"));
+        let filtered = users.docs.map(d => d.data()).filter(u => u.uid !== currentUser.uid && !currentUser.blocked?.includes(u.uid));
+        const minAge = parseInt(document.getElementById('filterAgeMin').value) || 18;
+        const maxAge = parseInt(document.getElementById('filterAgeMax').value) || 100;
+        const maxDistance = parseInt(document.getElementById('filterDistance').value) || 100;
+        const intent = document.getElementById('filterIntent').value;
+        const gender = document.getElementById('filterGender').value;
+        if(gender) filtered = filtered.filter(u => u.gender === gender);
+        if(intent) filtered = filtered.filter(u => u.intent === intent);
+        filtered = filtered.filter(u => u.age >= minAge && u.age <= maxAge);
+        // distance filter (simplified)
+        if(currentUser.location && currentUser.location.lat) {
+            const haversine = (loc1, loc2) => {
+                if(!loc1 || !loc2) return Infinity;
+                const R = 6371;
+                const dLat = (loc2.lat - loc1.lat) * Math.PI / 180;
+                const dLon = (loc2.lng - loc1.lng) * Math.PI / 180;
+                const a = Math.sin(dLat/2)**2 + Math.cos(loc1.lat * Math.PI/180) * Math.cos(loc2.lat * Math.PI/180) * Math.sin(dLon/2)**2;
+                return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            };
+            filtered = filtered.filter(u => u.location && haversine(currentUser.location, u.location) <= maxDistance);
+        }
+        // pending likes (free shows last 5)
+        const pendingLikes = users.docs.map(d => d.data()).filter(u => u.swipes && u.swipes.includes(currentUser.uid) && !currentUser.swipes?.includes(u.uid));
+        const matchQueueDiv = document.getElementById('matchQueue');
+        if(currentUser.features?.seeWhoLikedYou === true) {
+            matchQueueDiv.style.display = 'block';
+            document.getElementById('pendingLikesList').innerHTML = pendingLikes.slice(0,5).map(u => `<div style="padding:8px;"><img src="${u.profilePic}" width="40" style="border-radius:50%;"> ${u.name}, ${u.age} <button class="small-glass like-back" data-id="${u.uid}">Like Back</button></div>`).join('');
+            document.querySelectorAll('.like-back').forEach(btn => btn.addEventListener('click', async () => {
+                const targetId = btn.dataset.id;
+                const swipes = currentUser.swipes || [];
+                if(!swipes.includes(targetId)) {
+                    swipes.push(targetId);
+                    await updateDoc(doc(db, "users", currentUser.uid), { swipes });
+                    currentUser.swipes = swipes;
+                    const target = users.docs.find(d => d.id === targetId).data();
+                    if(target.swipes && target.swipes.includes(currentUser.uid)) {
+                        const matches = currentUser.matches || [];
+                        if(!matches.includes(targetId)) {
+                            matches.push(targetId);
+                            await updateDoc(doc(db, "users", currentUser.uid), { matches });
+                            currentUser.matches = matches;
+                            alert(`✨ Matched with ${target.name}! ✨`);
+                            showNotification(`🎉 New match with ${target.name}!`);
+                        }
+                    }
+                    renderExplore();
+                }
+            }));
+        } else {
+            matchQueueDiv.style.display = 'none';
+        }
+        document.getElementById('exploreList').innerHTML = filtered.map(u => `<div class="explore-card"><img src="${u.profilePic}" width="80" style="border-radius:50%;"><h4>${u.name}, ${u.age}</h4><button class="small-glass explore-like" data-id="${u.uid}">Like</button><button class="small-glass report-btn" data-id="${u.uid}">Report</button></div>`).join('');
+        document.querySelectorAll('.explore-like').forEach(btn => btn.addEventListener('click', async () => {
+            const targetId = btn.dataset.id;
+            const swipes = currentUser.swipes || [];
+            if(!swipes.includes(targetId)) {
+                swipes.push(targetId);
+                await updateDoc(doc(db, "users", currentUser.uid), { swipes });
+                currentUser.swipes = swipes;
+                alert("Liked!");
+                renderExplore();
+            }
+        }));
+        document.querySelectorAll('.report-btn').forEach(btn => btn.addEventListener('click', () => {
+            const targetId = btn.dataset.id;
+            const target = filtered.find(u => u.uid === targetId);
+            showReportModal(targetId, target?.name);
+        }));
+    }
+    function showReportModal(userId, userName) {
+        const modal = document.createElement('div'); modal.className = 'report-modal';
+        modal.innerHTML = `<h3>Report ${userName}</h3><button data-reason="Spam">Spam</button><button data-reason="Inappropriate">Inappropriate</button><button data-reason="Fake Profile">Fake Profile</button><button data-reason="Harassment">Harassment</button><button data-reason="Other">Other</button><button id="closeReportModal">Cancel</button>`;
+        document.body.appendChild(modal);
+        modal.querySelectorAll('[data-reason]').forEach(btn => btn.addEventListener('click', async () => {
+            await addDoc(collection(db, "reports"), { reporterId: currentUser.uid, reportedId: userId, reason: btn.dataset.reason, timestamp: Date.now() });
+            modal.remove();
+            alert("Reported.");
+        }));
+        modal.querySelector('#closeReportModal').onclick = () => modal.remove();
+    }
+    async function renderChatList() {
+        const container = document.getElementById('chatListContainer');
+        const matches = currentUser.matches || [];
+        if(matches.length === 0){ container.innerHTML = `<div class="glass-card">No matches yet. Start swiping!</div>`; return; }
+        const users = (await getDocs(collection(db, "users"))).docs.map(d => d.data());
+        const matchedUsers = users.filter(u => matches.includes(u.uid));
+        container.innerHTML = matchedUsers.map(m => `
+            <div class="chat-list-item" data-id="${m.uid}">
+                <div style="position:relative;"><img class="avatar" src="${m.profilePic}">${m.privacyOnlineStatus !== false && (Date.now() - (m.lastSeen||0) < 60000) ? '<span class="online-dot"></span>' : ''}</div>
+                <div class="chat-info"><div class="chat-name">${m.name}</div><div class="last-msg">Tap to chat</div></div>
+                <div class="chat-meta"><button class="small-glass block-chat-btn" data-id="${m.uid}">Block</button></div>
+            </div>
+        `).join('');
+        document.querySelectorAll('.chat-list-item').forEach(el => el.addEventListener('click', (e) => { if(!e.target.classList.contains('block-chat-btn')) openChatScreen(el.dataset.id); }));
+        document.querySelectorAll('.block-chat-btn').forEach(btn => btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const targetId = btn.dataset.id;
+            if(confirm("Block this user?")) {
+                const blocked = currentUser.blocked || [];
+                blocked.push(targetId);
+                await updateDoc(doc(db, "users", currentUser.uid), { blocked });
+                currentUser.blocked = blocked;
+                renderChatList();
+            }
+        }));
+    }
+    async function openChatScreen(partnerId) {
+        if(currentUser.verified !== true) { alert("You must verify your identity before chatting."); return; }
+        currentChatPartner = partnerId;
+        const users = (await getDocs(collection(db, "users"))).docs.map(d => d.data());
+        const partner = users.find(u => u.uid === partnerId);
+        document.getElementById('chatListContainer').style.display = 'none';
+        const screenDiv = document.getElementById('chatScreenContainer');
+        screenDiv.style.display = 'block';
+        let statusText = '';
+        if(partner.privacyOnlineStatus !== false && (Date.now() - (partner.lastSeen||0) < 60000)) statusText = 'Online';
+        else if(partner.privacyLastSeen !== false && partner.lastSeen) statusText = new Date(partner.lastSeen).toLocaleTimeString();
+        else statusText = 'Offline';
+        screenDiv.innerHTML = `
+            <div class="chat-header"><button class="back-btn" id="backToChatList"><i class="fas fa-arrow-left"></i></button><div class="chat-profile"><img src="${partner.profilePic}" id="chatAvatar"><div><div class="chat-name">${partner.name}</div><div class="chat-status" id="chatStatus">${statusText}</div><div id="typingStatus" style="font-size:0.7rem;"></div></div></div><div class="chat-actions"><i class="fas fa-phone" id="callDemo"></i><i class="fas fa-video" id="videoDemo"></i><i class="fas fa-ban" id="blockFromChat"></i><i class="fas fa-ellipsis-v" id="menuUnmatch"></i></div></div>
+            <div class="messages-area" id="messagesArea"></div>
+            <div class="input-area"><input type="text" id="messageInputChat" placeholder="Type a message..."><button id="sendChatMsg"><i class="fas fa-paper-plane"></i></button></div>
+        `;
+        document.getElementById('backToChatList').onclick = () => { screenDiv.style.display = 'none'; document.getElementById('chatListContainer').style.display = 'block'; if(unsubscribeMessages) unsubscribeMessages(); renderChatList(); };
+        document.getElementById('blockFromChat')?.addEventListener('click', async () => {
+            if(confirm(`Block ${partner.name}?`)) {
+                const blocked = currentUser.blocked || [];
+                blocked.push(partnerId);
+                await updateDoc(doc(db, "users", currentUser.uid), { blocked });
+                currentUser.blocked = blocked;
+                document.getElementById('backToChatList').click();
+            }
+        });
+        document.getElementById('menuUnmatch')?.addEventListener('click', async () => {
+            if(confirm(`Unmatch ${partner.name}?`)) {
+                const matches = currentUser.matches.filter(id => id !== partnerId);
+                await updateDoc(doc(db, "users", currentUser.uid), { matches });
+                currentUser.matches = matches;
+                document.getElementById('backToChatList').click();
+            }
+        });
+        const typingRef = doc(db, "typing", `${currentUser.uid}_${partnerId}`);
+        onSnapshot(typingRef, (doc) => { if(doc.exists() && doc.data().isTyping && doc.data().userId === partnerId) document.getElementById('typingStatus').innerHTML = "typing..."; else document.getElementById('typingStatus').innerHTML = ""; });
+        const input = document.getElementById('messageInputChat');
+        input.addEventListener('input', async () => {
+            await setDoc(typingRef, { userId: currentUser.uid, isTyping: true, timestamp: Date.now() });
+            if(typingTimeout) clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(async () => { await setDoc(typingRef, { userId: currentUser.uid, isTyping: false, timestamp: Date.now() }); }, 1000);
+        });
+        const chatId = [currentUser.uid, partnerId].sort().join('_');
+        const messagesArea = document.getElementById('messagesArea');
+        const q = query(collection(db, "chats", chatId, "messages"), orderBy("timestamp"));
+        if(unsubscribeMessages) unsubscribeMessages();
+        unsubscribeMessages = onSnapshot(q, async (snapshot) => {
+            const messages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            messagesArea.innerHTML = messages.map(msg => {
+                const isSent = msg.senderId === currentUser.uid;
+                const time = new Date(msg.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                let statusHtml = '';
+                if(isSent && currentUser.features?.readReceipts === true) {
+                    if(msg.status === 'sent') statusHtml = '✓';
+                    else if(msg.status === 'delivered') statusHtml = '✓✓';
+                    else if(msg.status === 'read') statusHtml = '✓✓✓';
+                }
+                return `<div class="message-bubble ${isSent ? 'sent' : 'received'}"><div class="message-text">${msg.text}</div><div class="message-time">${time} ${statusHtml}</div></div>`;
+            }).join('');
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+            const batch = writeBatch(db);
+            messages.forEach(msg => {
+                if(msg.senderId === partnerId && !msg.read) {
+                    const msgRef = doc(db, "chats", chatId, "messages", msg.id);
+                    batch.update(msgRef, { read: true, status: 'read' });
+                }
+            });
+            await batch.commit();
+        });
+        document.getElementById('sendChatMsg').onclick = async () => {
+            const text = input.value.trim();
+            if(!text) return;
+            await addDoc(collection(db, "chats", chatId, "messages"), { senderId: currentUser.uid, text, timestamp: Date.now(), status: "sent", read: false });
+            input.value = '';
+            await setDoc(typingRef, { userId: currentUser.uid, isTyping: false, timestamp: Date.now() });
+        };
+    }
+    async function updateProfileCompletion() {
+        const fields = [currentUser.name, currentUser.bio, currentUser.location];
+        let filled = fields.filter(f => f).length;
+        let percent = (filled/3)*100;
+        document.getElementById('profileProgress').style.width = percent+'%';
+    }
+    async function renderProfileUI() {
+        document.getElementById('profileUsername').innerText = currentUser.name;
+        document.getElementById('profileStatus').innerText = currentUser.bio || "Hey there!";
+        document.getElementById('profileAvatar').src = currentUser.profilePic || 'https://randomuser.me/api/portraits/lego/1.jpg';
+        document.getElementById('matchesCount').innerText = currentUser.matches?.length || 0;
+        document.getElementById('likesCount').innerText = currentUser.swipes?.length || 0;
+        document.getElementById('viewsCount').innerText = "0";
+        updateProfileCompletion();
+        if(currentUser.verified) document.querySelector('.verified-badge').style.display = 'inline-block';
+        else document.querySelector('.verified-badge').style.display = 'none';
+        if(currentUser.isPremium) document.getElementById('premiumBadge').style.display = 'inline-block';
+        else document.getElementById('premiumBadge').style.display = 'none';
+        const boostBtn = document.getElementById('boostProfileBtn');
+        if(currentUser.features?.boost === true) boostBtn.onclick = () => alert("Boost activated!");
+        else boostBtn.onclick = () => alert("Upgrade to Platinum to unlock Boost.");
+        const settingsList = [
+            { icon: "fas fa-user-circle", title: "Account", key: "account" },
+            { icon: "fas fa-lock", title: "Privacy", key: "privacy" },
+            { icon: "fas fa-sliders-h", title: "Dating Preferences", key: "dating" },
+            { icon: "fas fa-crown", title: "Premium Features", key: "premium" },
+            { icon: "fas fa-question-circle", title: "Help & Support", key: "help" }
+        ];
+        document.getElementById('settingsListContainer').innerHTML = settingsList.map(s => `<div class="settings-item" data-key="${s.key}"><div class="settings-item-left"><i class="${s.icon}"></i><span>${s.title}</span></div><i class="fas fa-chevron-right"></i></div>`).join('');
+        document.querySelectorAll('.settings-item').forEach(el => el.addEventListener('click', () => showSettingsDetail(el.dataset.key)));
+        document.getElementById('editProfileBtn').onclick = () => { document.getElementById('profileView').classList.remove('active-view'); document.getElementById('editProfileView').style.display = 'block'; loadEditProfile(); };
+        document.getElementById('shareProfileBtn').onclick = () => alert("Share profile link (demo)");
+        document.getElementById('changePhotoBtn').onclick = () => document.getElementById('photoUploadInput').click();
+        document.getElementById('photoUploadInput').onchange = async (e) => {
+            if(e.target.files[0]){
+                const file = e.target.files[0];
+                const storageRef = ref(storage, `profilePics/${currentUser.uid}/${Date.now()}_${file.name}`);
+                await uploadBytes(storageRef, file);
+                const url = await getDownloadURL(storageRef);
+                await updateDoc(doc(db, "users", currentUser.uid), { profilePic: url });
+                currentUser.profilePic = url;
+                document.getElementById('profileAvatar').src = url;
+                alert("Photo updated!");
+            }
+        };
+        document.getElementById('logoutBtnProfile').onclick = async () => {
+            if(heartbeatInterval) clearInterval(heartbeatInterval);
+            localStorage.removeItem('currentUserUid');
+            window.location.reload();
+        };
+        document.getElementById('upgradeBtn').onclick = () => showUpgradeModal();
+    }
+    function loadEditProfile() {
+        document.getElementById('editName').value = currentUser.name;
+        document.getElementById('editBio').value = currentUser.bio || "";
+        document.getElementById('editGender').value = currentUser.gender;
+        document.getElementById('editAge').value = currentUser.age;
+        document.getElementById('editLocation').value = currentUser.location || "";
+        const interests = currentUser.interests || [];
+        const container = document.getElementById('interestsContainer');
+        function renderTags() { container.innerHTML = interests.map((tag,i) => `<span class="tag">${tag} <i class="fas fa-times-circle remove-tag" data-index="${i}"></i></span>`).join(''); }
+        renderTags();
+        document.getElementById('newInterestInput').onkeypress = (e) => { if(e.key === 'Enter' && e.target.value.trim()){ interests.push(e.target.value.trim()); renderTags(); e.target.value = ''; } };
+        document.getElementById('saveProfileChanges').onclick = async () => {
+            await updateDoc(doc(db, "users", currentUser.uid), {
+                name: document.getElementById('editName').value,
+                bio: document.getElementById('editBio').value,
+                gender: document.getElementById('editGender').value,
+                age: parseInt(document.getElementById('editAge').value),
+                location: document.getElementById('editLocation').value,
+                interests: interests,
+                intent: document.getElementById('editIntent').value
+            });
+            currentUser = (await getDoc(doc(db, "users", currentUser.uid))).data();
+            alert("Profile updated");
+            document.getElementById('backFromEdit').click();
+        };
+        document.getElementById('backFromEdit').onclick = () => { document.getElementById('editProfileView').style.display = 'none'; document.getElementById('profileView').classList.add('active-view'); renderProfileUI(); };
+    }
+    function showSettingsDetail(section) {
+        document.getElementById('profileView').classList.remove('active-view');
+        document.getElementById('settingsDetailView').style.display = 'block';
+        document.getElementById('settingsTitle').innerText = section;
+        let content = '';
+        if(section === 'account') content = `<div class="settings-item" id="changeEmailBtn"><div>Change email/phone</div><i class="fas fa-chevron-right"></i></div><div class="settings-item" id="updatePasswordBtn"><div>Update password</div><i class="fas fa-chevron-right"></i></div><div class="settings-item" id="emailVerificationBtn"><div>Email Verification</div><i class="fas fa-envelope"></i></div>`;
+        else if(section === 'privacy') content = `<div class="settings-item"><div>Last seen</div><div class="toggle-switch ${currentUser.privacyLastSeen !== false ? 'active' : ''}" id="lastSeenToggle"><div class="toggle-knob"></div></div></div><div class="settings-item"><div>Online status</div><div class="toggle-switch ${currentUser.privacyOnlineStatus !== false ? 'active' : ''}" id="onlineStatusToggle"><div class="toggle-knob"></div></div></div><div class="settings-item" id="blockedUsersBtn"><div>Blocked users</div><i class="fas fa-chevron-right"></i></div><div id="blockedUsersList"></div>`;
+        else if(section === 'dating') content = `<div class="settings-item"><div>Age preference</div><div class="dual-slider-container"><div class="range-values"><span>Min: <span id="minAgeVal">${currentUser.prefAgeMin||18}</span></span><span>Max: <span id="maxAgeVal">${currentUser.prefAgeMax||100}</span></span></div><input type="range" id="minAgeSlider" min="18" max="60" value="${currentUser.prefAgeMin||18}"><input type="range" id="maxAgeSlider" min="18" max="60" value="${currentUser.prefAgeMax||100}"></div></div><div class="settings-item"><div>Distance preference</div><input type="range" id="distancePrefSlider" min="5" max="100" value="${currentUser.prefDistance||50}"><span id="distancePrefVal">${currentUser.prefDistance||50}</span> km</div><button class="small-glass" id="savePrefsBtn">Save Preferences</button>`;
+        else if(section === 'premium') content = `<div class="premium-card"><i class="fas fa-crown"></i><h3>Get Verified</h3><p>Blue check badge & priority</p><button class="small-glass" id="verifyBtn">Upgrade Now</button><hr><div><strong>Gold ($3.27/month)</strong><br>✓ Unlimited swipes<br>✓ See who liked you<br><br><strong>Platinum ($12.99/month)</strong><br>✓ All Gold<br>✓ Read receipts<br>✓ Profile boost</div><button class="gradient-btn" id="subscribeGoldBtn">Subscribe to Gold</button><button class="gradient-btn" id="subscribePlatinumBtn">Subscribe to Platinum</button></div>`;
+        else content = `<div class="settings-item">FAQ</div><div class="settings-item">Contact support</div>`;
+        document.getElementById('settingsDetailContent').innerHTML = content;
+        if(section === 'account') {
+            document.getElementById('changeEmailBtn')?.addEventListener('click', () => { const newEmail = prompt("New email:"); if(newEmail) updateEmail(auth.currentUser, newEmail).then(()=>alert("Email updated")).catch(err=>alert(err.message)); });
+            document.getElementById('updatePasswordBtn')?.addEventListener('click', () => { const newPwd = prompt("New password:"); if(newPwd) updatePassword(auth.currentUser, newPwd).then(()=>alert("Password updated")).catch(err=>alert(err.message)); });
+            document.getElementById('emailVerificationBtn')?.addEventListener('click', () => sendEmailVerification(auth.currentUser).then(()=>alert("Verification email sent")));
+        }
+        if(section === 'privacy') {
+            document.getElementById('lastSeenToggle')?.addEventListener('click', async (e) => { e.stopPropagation(); const active = document.getElementById('lastSeenToggle').classList.toggle('active'); await updateDoc(doc(db,"users",currentUser.uid),{ privacyLastSeen: active }); });
+            document.getElementById('onlineStatusToggle')?.addEventListener('click', async (e) => { e.stopPropagation(); const active = document.getElementById('onlineStatusToggle').classList.toggle('active'); await updateDoc(doc(db,"users",currentUser.uid),{ privacyOnlineStatus: active }); });
+            document.getElementById('blockedUsersBtn')?.addEventListener('click', async () => {
+                const blockedUsers = await Promise.all((currentUser.blocked||[]).map(async uid => (await getDoc(doc(db,"users",uid))).data()));
+                document.getElementById('blockedUsersList').innerHTML = blockedUsers.map(u => `<div class="blocked-user-item"><span>${u?.name||uid}</span><button class="small-glass unblock-btn" data-id="${uid}">Unblock</button></div>`).join('');
+                document.querySelectorAll('.unblock-btn').forEach(btn => btn.addEventListener('click', async () => {
+                    const newBlocked = (currentUser.blocked||[]).filter(id => id !== btn.dataset.id);
+                    await updateDoc(doc(db,"users",currentUser.uid),{ blocked: newBlocked });
+                    currentUser.blocked = newBlocked;
+                    document.getElementById('blockedUsersBtn').click();
+                }));
+            });
+        }
+        if(section === 'dating') {
+            const minSlider = document.getElementById('minAgeSlider'), maxSlider = document.getElementById('maxAgeSlider'), distSlider = document.getElementById('distancePrefSlider');
+            minSlider.oninput = () => document.getElementById('minAgeVal').innerText = minSlider.value;
+            maxSlider.oninput = () => document.getElementById('maxAgeVal').innerText = maxSlider.value;
+            distSlider.oninput = () => document.getElementById('distancePrefVal').innerText = distSlider.value;
+            document.getElementById('savePrefsBtn').onclick = async () => {
+                await updateDoc(doc(db,"users",currentUser.uid),{ prefAgeMin: parseInt(minSlider.value), prefAgeMax: parseInt(maxSlider.value), prefDistance: parseInt(distSlider.value) });
+                alert("Preferences saved");
+            };
+        }
+        if(section === 'premium') {
+            document.getElementById('verifyBtn')?.addEventListener('click', () => showUpgradeModal());
+            document.getElementById('subscribeGoldBtn')?.addEventListener('click', () => upgradeToPremium(currentUser.uid, 'gold'));
+            document.getElementById('subscribePlatinumBtn')?.addEventListener('click', () => upgradeToPremium(currentUser.uid, 'platinum'));
+        }
+        document.getElementById('backFromSettings').onclick = () => { document.getElementById('settingsDetailView').style.display = 'none'; document.getElementById('profileView').classList.add('active-view'); renderProfileUI(); };
+    }
+    async function upgradeToPremium(userId, plan) {
+        const expiresAt = Date.now() + 30*24*60*60*1000;
+        let features = {};
+        if(plan === 'gold') features = { unlimitedSwipes: true, seeWhoLikedYou: true, readReceipts: false, boost: false };
+        else features = { unlimitedSwipes: true, seeWhoLikedYou: true, readReceipts: true, boost: true };
+        await updateDoc(doc(db, "users", userId), { isPremium: true, premiumPlan: plan, premiumExpiresAt: expiresAt, features });
+        alert(`Upgraded to ${plan.toUpperCase()}!`);
+        currentUser = (await getDoc(doc(db, "users", userId))).data();
+        renderProfileUI();
+    }
+    function showUpgradeModal() {
+        const modal = document.createElement('div'); modal.className = 'upgrade-modal';
+        modal.innerHTML = `<h3>Choose Plan</h3><div class="upgrade-plan" data-plan="gold"><strong>Gold – $3.27/month</strong><br>Unlimited swipes + See who liked you</div><div class="upgrade-plan" data-plan="platinum"><strong>Platinum – $12.99/month</strong><br>All Gold + Read receipts + Boost</div><button class="small-glass" id="closeUpgradeModal">Cancel</button>`;
+        document.body.appendChild(modal);
+        modal.querySelectorAll('.upgrade-plan').forEach(btn => btn.addEventListener('click', async () => {
+            await upgradeToPremium(currentUser.uid, btn.dataset.plan);
+            modal.remove();
+        }));
+        modal.querySelector('#closeUpgradeModal').onclick = () => modal.remove();
+    }
+    function attachNavEvents() {
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', async () => {
+                const viewId = item.dataset.nav;
+                document.querySelectorAll('.view').forEach(v => v.classList.remove('active-view'));
+                document.getElementById(viewId + 'View').classList.add('active-view');
+                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                item.classList.add('active');
+                if(viewId === 'messages') { document.getElementById('chatListContainer').style.display = 'block'; document.getElementById('chatScreenContainer').style.display = 'none'; if(unsubscribeMessages) unsubscribeMessages(); await renderChatList(); }
+                if(viewId === 'explore') await renderExplore();
+                if(viewId === 'profile') await renderProfileUI();
+                if(viewId === 'swipe') await renderSwipeCards();
+                document.getElementById('editProfileView').style.display = 'none';
+                document.getElementById('settingsDetailView').style.display = 'none';
+            });
+        });
+        document.querySelector('.nav-item[data-nav="swipe"]').classList.add('active');
+    }
+    async function showMainApp() {
+        document.getElementById('loginView').style.display = 'none';
+        document.getElementById('signupView').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        await loadCurrentUser();
+        if(unsubscribeUser) unsubscribeUser();
+        const userRef = doc(db, "users", currentUser.uid);
+        unsubscribeUser = onSnapshot(userRef, (docSnap) => { if(docSnap.exists()) { currentUser = docSnap.data(); renderProfileUI(); renderSwipeCards(); renderExplore(); renderChatList(); } });
+        await renderAll();
+        attachNavEvents();
+        await renderSwipeCards();
+        renderChatList();
+        startHeartbeat();
+        await updateLastSeen();
+        window.addEventListener('beforeunload', async () => { if(currentUser) await updateDoc(doc(db,"users",currentUser.uid),{ lastSeen: 0 }); if(heartbeatInterval) clearInterval(heartbeatInterval); });
+    }
+    async function startHeartbeat() { if(heartbeatInterval) clearInterval(heartbeatInterval); heartbeatInterval = setInterval(async () => { if(currentUser) await updateDoc(doc(db,"users",currentUser.uid),{ lastSeen: Date.now() }); }, 30000); }
+    async function updateLastSeen() { if(currentUser) await updateDoc(doc(db,"users",currentUser.uid),{ lastSeen: Date.now() }); }
+    async function loadCurrentUser() { const uid = localStorage.getItem('currentUserUid'); if(uid) currentUser = (await getDoc(doc(db,"users",uid))).data(); }
     async function renderAll() { await renderProfileUI(); await renderChatList(); await renderExplore(); }
 
     // UI event binding
-    document.getElementById('goToSignupLink')?.addEventListener('click',(e)=>{ e.preventDefault(); document.getElementById('loginView').style.display='none'; document.getElementById('signupView').style.display='flex'; });
-    document.getElementById('goToLoginLink')?.addEventListener('click',(e)=>{ e.preventDefault(); document.getElementById('signupView').style.display='none'; document.getElementById('loginView').style.display='flex'; });
-    document.getElementById('forgotPasswordBtn')?.addEventListener('click',()=>{ const email=prompt("Enter your email:"); if(email) sendPasswordResetEmail(auth,email).then(()=>alert("Reset email sent")).catch(err=>alert(err.message)); });
-    document.getElementById('googleSignInBtn')?.addEventListener('click',async()=>{ try{ const user=await window.signInWithGoogle(); localStorage.setItem('currentUserUid',user.uid); currentUser=(await getDoc(doc(db,"users",user.uid))).data(); showMainApp(); }catch(err){ alert(err.message); } });
-    document.getElementById('googleSignUpBtn')?.addEventListener('click',async()=>{ try{ const user=await window.signInWithGoogle(); localStorage.setItem('currentUserUid',user.uid); currentUser=(await getDoc(doc(db,"users",user.uid))).data(); showMainApp(); }catch(err){ alert(err.message); } });
-    document.getElementById('signupFormElem')?.addEventListener('submit',async(e)=>{ e.preventDefault(); const name=document.getElementById('signupName').value, email=document.getElementById('signupEmail').value, pwd=document.getElementById('signupPassword').value, confirm=document.getElementById('confirmPwd').value; if(pwd!==confirm){ alert("Passwords mismatch"); return; } const gender=document.getElementById('signupGender').value, age=document.getElementById('signupAge').value; try{ await window.signupUser(email,pwd,name,age,gender); document.getElementById('signupView').style.display='none'; document.getElementById('loginView').style.display='flex'; }catch(err){ alert("Signup failed: "+err.message); } });
-    document.getElementById('loginFormElem')?.addEventListener('submit',async(e)=>{ e.preventDefault(); const email=document.getElementById('loginEmail').value, pwd=document.getElementById('loginPassword').value; try{ const user=await window.loginUserFirebase(email,pwd); localStorage.setItem('currentUserUid',user.uid); currentUser=(await getDoc(doc(db,"users",user.uid))).data(); showMainApp(); }catch(err){ alert("Login failed: "+err.message); } });
-    document.getElementById('verifyIdentityBtn')?.addEventListener('click',async()=>{ await updateDoc(doc(db,"users",currentUser.uid),{verified:true}); alert("Identity verified!"); });
-    document.getElementById('eventsBtn')?.addEventListener('click',loadEvents);
-    document.getElementById('uploadIntroBtn')?.addEventListener('click',()=>{ const file=document.getElementById('introUploadInput').files[0]; if(file) uploadIntro(file); else alert("Select a file first"); });
-    document.getElementById('adminDirectBtn')?.addEventListener('click',()=>{ const pwd=prompt("Admin password:"); if(pwd==='Crains'){ isAdminLoggedIn=true; renderAdminPanel(); } else alert("Wrong password"); });
+    document.getElementById('goToSignupLink')?.addEventListener('click', (e) => { e.preventDefault(); document.getElementById('loginView').style.display = 'none'; document.getElementById('signupView').style.display = 'flex'; });
+    document.getElementById('goToLoginLink')?.addEventListener('click', (e) => { e.preventDefault(); document.getElementById('signupView').style.display = 'none'; document.getElementById('loginView').style.display = 'flex'; });
+    document.getElementById('forgotPasswordBtn')?.addEventListener('click', () => { const email = prompt("Enter your email:"); if(email) sendPasswordResetEmail(auth, email).then(()=>alert("Reset email sent")).catch(err=>alert(err.message)); });
+    document.getElementById('googleSignInBtn')?.addEventListener('click', async () => { try{ const user=await window.signInWithGoogle(); localStorage.setItem('currentUserUid',user.uid); currentUser=(await getDoc(doc(db,"users",user.uid))).data(); showMainApp(); }catch(err){ alert(err.message); } });
+    document.getElementById('googleSignUpBtn')?.addEventListener('click', async () => { try{ const user=await window.signInWithGoogle(); localStorage.setItem('currentUserUid',user.uid); currentUser=(await getDoc(doc(db,"users",user.uid))).data(); showMainApp(); }catch(err){ alert(err.message); } });
+    document.getElementById('signupFormElem')?.addEventListener('submit', async (e) => { e.preventDefault(); const name=document.getElementById('signupName').value, email=document.getElementById('signupEmail').value, pwd=document.getElementById('signupPassword').value, confirm=document.getElementById('confirmPwd').value; if(pwd!==confirm){ alert("Passwords mismatch"); return; } const gender=document.getElementById('signupGender').value, age=document.getElementById('signupAge').value; try{ await window.signupUser(email,pwd,name,age,gender); document.getElementById('signupView').style.display='none'; document.getElementById('loginView').style.display='flex'; }catch(err){ alert("Signup failed: "+err.message); } });
+    document.getElementById('loginFormElem')?.addEventListener('submit', async (e) => { e.preventDefault(); const email=document.getElementById('loginEmail').value, pwd=document.getElementById('loginPassword').value; try{ const user=await window.loginUserFirebase(email,pwd); localStorage.setItem('currentUserUid',user.uid); currentUser=(await getDoc(doc(db,"users",user.uid))).data(); showMainApp(); }catch(err){ alert("Login failed: "+err.message); } });
+    document.getElementById('verifyIdentityBtn')?.addEventListener('click', async () => { await updateDoc(doc(db,"users",currentUser.uid),{ verified: true }); alert("Identity verified!"); renderProfileUI(); });
+    document.getElementById('eventsBtn')?.addEventListener('click', loadEvents);
+    document.getElementById('uploadIntroBtn')?.addEventListener('click', () => { const file=document.getElementById('introUploadInput').files[0]; if(file) uploadIntro(file); else alert("Select a file first"); });
+    document.getElementById('adminDirectBtn')?.addEventListener('click', () => { const pwd=prompt("Admin password:"); if(pwd==='Crains'){ isAdminLoggedIn=true; renderAdminPanel(); } else alert("Wrong password"); });
     const appealBtn=document.createElement('button'); appealBtn.innerText="Appeal Ban"; appealBtn.className="small-glass"; appealBtn.onclick=()=>{ const reason=prompt("Why should we unban you?"); if(reason) submitAppeal(reason); }; document.querySelector('.action-buttons-row')?.appendChild(appealBtn);
-    document.getElementById('applyFilterBtn')?.addEventListener('click',()=>renderExplore());
+    document.getElementById('applyFilterBtn')?.addEventListener('click', () => renderExplore());
+    document.querySelectorAll('.toggle-pwd').forEach(icon=>{ icon.addEventListener('click',function(){ let target=document.getElementById(this.dataset.target); if(target.type==='password') target.type='text'; else target.type='password'; this.classList.toggle('fa-eye');}); });
 
     if(localStorage.getItem('currentUserUid')) { loadCurrentUser().then(()=>{ if(currentUser) showMainApp(); else document.getElementById('loginView').style.display='flex'; }); } else { document.getElementById('loginView').style.display='flex'; }
-    document.querySelectorAll('.toggle-pwd').forEach(icon=>{ icon.addEventListener('click',function(){ let target=document.getElementById(this.dataset.target); if(target.type==='password') target.type='text'; else target.type='password'; this.classList.toggle('fa-eye');}); });
 </script>
-<script> if ("serviceWorker" in navigator) { navigator.serviceWorker.register("/service-worker.js").then(()=>console.log("SW Registered")).catch(err=>console.log("SW error",err)); } </script>
+<script>
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/service-worker.js")
+            .then(() => console.log("Service Worker Registered"))
+            .catch(err => console.log("SW error", err));
+    }
+</script>
+<textarea id="firebaseRules" style="display:none;">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth.uid == userId;
+    }
+    match /chats/{chatId}/messages/{message} {
+      allow read, write: if request.auth != null;
+    }
+    match /reports/{report} {
+      allow read, write: if request.auth != null;
+    }
+    match /appeals/{appeal} {
+      allow read, write: if request.auth != null;
+    }
+    match /events/{event} {
+      allow read, write: if request.auth != null;
+    }
+    match /profileViews/{view} {
+      allow read, write: if request.auth != null;
+    }
+    match /typing/{doc} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}</textarea>
+<button id="downloadRulesBtn" style="position:fixed; bottom:80px; right:16px; z-index:1000; background:#ff4d6d; border-radius:40px; padding:8px 16px; border:none; color:white;">📜 Security Rules</button>
+<script>document.getElementById('downloadRulesBtn').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([document.getElementById('firebaseRules').value],{type:'text/plain'}));a.download='firestore.rules';a.click();URL.revokeObjectURL(a.href);};</script>
 </body>
 </html>
