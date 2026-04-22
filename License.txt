@@ -1,9 +1,0 @@
-Copyright © 2026 Crain Sakala
-
-All rights reserved.
-
-This software and its source code are the exclusive property of Crain Sakala.
-
-No part of this software may be used, copied, modified, merged, published, distributed, sublicensed, or sold without explicit written permission from the author.
-
-Unauthorized use is strictly prohibited.
